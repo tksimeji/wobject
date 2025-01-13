@@ -1,0 +1,8 @@
+name: Wobject
+version: '0.0.0'
+main: com.tksimeji.wobject.Wobject
+api-version: '1.21'
+commands:
+  wobject:
+    description: Command set for Wobject.
+    usage: /wobject <subcommand> [args...]
