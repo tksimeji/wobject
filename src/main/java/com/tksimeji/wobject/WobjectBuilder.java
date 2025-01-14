@@ -41,7 +41,7 @@ public final class WobjectBuilder<T> extends HashMap<WobjectComponent, Block> {
             throw new IllegalArgumentException();
         }
 
-        if (key.getType() != value.getType()) {
+        if (! key.getTypes().contains(value.getType())) {
             throw new IllegalArgumentException();
         }
 

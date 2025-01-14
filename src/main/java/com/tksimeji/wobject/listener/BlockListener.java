@@ -4,7 +4,9 @@ import com.tksimeji.wobject.Wobject;
 import com.tksimeji.wobject.WobjectBuilder;
 import com.tksimeji.wobject.reflect.WobjectClass;
 import com.tksimeji.wobject.reflect.WobjectComponent;
+import com.tksimeji.wobject.ui.ComponentUI;
 import org.bukkit.NamespacedKey;
+import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -35,6 +37,17 @@ public final class BlockListener implements Listener {
         }
 
         WobjectComponent component = builder.getWobjectClass().getComponent(container.get(new NamespacedKey(Wobject.plugin(), "component"), PersistentDataType.STRING));
+
+        if (component == null) {
+            return;
+        }
+
+        if (1 < component.getTypes().size()) {
+            event.setCancelled(true);
+            new ComponentUI(player, component, event.getBlock(), builder);
+            return;
+        }
+
         builder.put(component, event.getBlock());
         player.getInventory().setItemInMainHand(null);
     }
@@ -43,10 +56,11 @@ public final class BlockListener implements Listener {
     public void onBlockBreak(@NotNull BlockBreakEvent event) {
         for (WobjectClass<?> clazz : WobjectClass.all()) {
             for (Object wobject : clazz.getWobjects()) {
-                for (WobjectComponent component : clazz.getComponents()) {
-                    if (event.getBlock().getLocation().equals(component.getValue(wobject))) {
-                        clazz.kill(wobject);
-                    }
+                if (clazz.getComponents().stream().anyMatch(component -> {
+                    Block block = component.getValue(wobject);
+                    return block != null && event.getBlock().getLocation().equals(block.getLocation());
+                })) {
+                    clazz.kill(wobject);
                 }
             }
         }

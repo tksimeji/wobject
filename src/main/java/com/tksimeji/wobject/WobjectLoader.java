@@ -32,7 +32,7 @@ public final class WobjectLoader {
                     componentJson.get("y").getAsInt(),
                     componentJson.get("z").getAsInt()).getBlock();
 
-            if (component.getType() != block.getType()) {
+            if (! component.getTypes().contains(block.getType())) {
                 throw new IllegalStateException();
             }
 

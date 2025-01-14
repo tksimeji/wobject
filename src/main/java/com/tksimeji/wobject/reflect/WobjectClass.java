@@ -3,6 +3,7 @@ package com.tksimeji.wobject.reflect;
 import com.google.gson.JsonObject;
 import com.tksimeji.wobject.api.Component;
 import com.tksimeji.wobject.api.Wobject;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -151,5 +152,14 @@ public final class WobjectClass<T> implements Type {
         }
 
         wobjects.remove(getUniqueId(wobject));
+        getComponents().forEach(component -> {
+            Block block = component.getValue(wobject);
+
+            if (block != null) {
+                block.setType(Material.AIR);
+            }
+        });
+
+        com.tksimeji.wobject.Wobject.setJson();
     }
 }

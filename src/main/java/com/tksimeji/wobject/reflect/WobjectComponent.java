@@ -18,6 +18,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
+import java.util.List;
 import java.util.UUID;
 
 public final class WobjectComponent implements Member {
@@ -35,6 +36,10 @@ public final class WobjectComponent implements Member {
 
         this.field = field;
         annotation = field.getAnnotation(Component.class);
+
+        if (getTypes().isEmpty()) {
+            throw new IllegalArgumentException();
+        }
     }
 
     @Override
@@ -42,8 +47,8 @@ public final class WobjectComponent implements Member {
         return field.getName();
     }
 
-    public @NotNull Material getType() {
-        return annotation.type();
+    public @NotNull List<Material> getTypes() {
+        return List.of(annotation.type());
     }
 
     public @Nullable Block getValue(@NotNull Object wobject) {
@@ -56,7 +61,7 @@ public final class WobjectComponent implements Member {
     }
 
     public void setValue(@NotNull Object wobject, @Nullable Block value) {
-        if (value != null && value.getType() != getType()) {
+        if (value != null && ! getTypes().contains(value.getType())) {
             throw new IllegalArgumentException();
         }
 
@@ -90,7 +95,15 @@ public final class WobjectComponent implements Member {
     }
 
     public @NotNull ItemStack asItemStack(@NotNull UUID uuid) {
-        ItemStack itemStack = new ItemStack(getType());
+        return asItemStack(uuid, 0);
+    }
+
+    public @NotNull ItemStack asItemStack(@NotNull UUID uuid, int texture) {
+        if (texture < 0 || getTypes().size() <= texture || ! getTypes().contains(getTypes().get(texture))) {
+            throw new IllegalArgumentException();
+        }
+
+        ItemStack itemStack = new ItemStack(getTypes().get(texture), 1);
 
         ItemMeta itemMeta = itemStack.getItemMeta();
         itemMeta.displayName(net.kyori.adventure.text.Component.text(getName()).color(NamedTextColor.AQUA).decoration(TextDecoration.ITALIC, false));

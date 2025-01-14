@@ -3,7 +3,10 @@ package com.tksimeji.wobject;
 import com.google.gson.JsonArray;
 import com.tksimeji.wobject.command.WobjectCommand;
 import com.tksimeji.wobject.listener.BlockListener;
+import com.tksimeji.wobject.listener.InventoryListener;
 import com.tksimeji.wobject.reflect.WobjectClass;
+import com.tksimeji.wobject.runnable.ItemStackRunnable;
+import com.tksimeji.wobject.test.SampleWobject;
 import com.tksimeji.wobject.util.ResourceUtility;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
@@ -42,8 +45,13 @@ public final class Wobject extends JavaPlugin {
         getCommand("wobject").setExecutor(new WobjectCommand());
 
         getServer().getPluginManager().registerEvents(new BlockListener(), this);
+        getServer().getPluginManager().registerEvents(new InventoryListener(), this);
 
         ResourceUtility.newResource("wobject.json", false);
+
+        new ItemStackRunnable().runTaskTimerAsynchronously(this, 0L, 16L);
+
+        WobjectClass.of(SampleWobject.class);
 
         WobjectLoader.load();
     }
