@@ -80,7 +80,7 @@ public final class WobjectClass<T> implements Type {
                         .filter(method -> method.isAnnotationPresent(Handler.Kill.class))
                         .collect(Collectors.toSet());
 
-        if (! Key.parseable(annotation.key())) {
+        if (! Key.parseable(annotation.value())) {
             throw new IllegalArgumentException();
         }
 
@@ -88,7 +88,7 @@ public final class WobjectClass<T> implements Type {
     }
 
     public @NotNull Key getKey() {
-        return Key.key(annotation.key().contains(":") ? annotation.key() : "wobject:" + annotation.key());
+        return Key.key(annotation.value().contains(":") ? annotation.value() : "wobject:" + annotation.value());
     }
 
     public @NotNull UUID getUniqueId(@NotNull Object wobject) {

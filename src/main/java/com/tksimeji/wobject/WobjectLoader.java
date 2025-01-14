@@ -34,11 +34,11 @@ public final class WobjectLoader {
 
         com.tksimeji.wobject.api.Wobject annotation = clazz.getAnnotation(com.tksimeji.wobject.api.Wobject.class);
 
-        if (! Key.parseable(annotation.key())) {
-            throw new IllegalArgumentException("\"" + annotation.key() + "\" is an invalid key.");
+        if (! Key.parseable(annotation.value())) {
+            throw new IllegalArgumentException("\"" + annotation.value() + "\" is an invalid key.");
         }
 
-        Key key = Key.key(annotation.key().contains(":") ? annotation.key() : "wobject:" + annotation.key());
+        Key key = Key.key(annotation.value().contains(":") ? annotation.value() : "wobject:" + annotation.value());
 
         if (map.containsKey(key)) {
             throw new IllegalStateException("The key \"" + key.asString() + "\" is already registered.");

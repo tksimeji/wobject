@@ -48,7 +48,7 @@ public final class WobjectComponent implements Member {
     }
 
     public @NotNull List<Material> getTypes() {
-        return List.of(annotation.type());
+        return List.of(annotation.value());
     }
 
     public @Nullable Block getValue(@NotNull Object wobject) {
