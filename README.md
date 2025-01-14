@@ -72,6 +72,8 @@ These are declared as fields of type `org.bukkit.block.Block` with the `com.tksi
 and are automatically injected when an instance is created.
 
 ```java
+// Note: The field name will be the comopnent name.
+
 @Component({Material.TORCH, Material.SOUL_TORCH, Material.REDSTONE_TORCH})
 private Block torch;
 ```
@@ -84,12 +86,12 @@ It is declared with the `com.tksimeji.wobject.api.Handler.*` annotation.
 ```java
 // The values that can be obtained from the arguments vary depending on the type of handler.
 
-@Handler.Interact(component = "namespace:component_name")
+@Handler.Interact(component = "component_name")
 public void handler1(BlockBreakEvent event, Player player, Block block) {
     // Called when the component is interacted with.
 }
 
-@Handler.Redstone(component = "namespace:component_name")
+@Handler.Redstone(component = "component_name")
 public void handler2(BlockRedstoneEvent event, Block block) {
     // Called when the component's redstone signal strength changes.
 }
