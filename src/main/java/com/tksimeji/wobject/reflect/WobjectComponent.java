@@ -37,7 +37,7 @@ public final class WobjectComponent implements Member {
         this.field = field;
         annotation = field.getAnnotation(Component.class);
 
-        if (getTypes().isEmpty()) {
+        if (getTypes().isEmpty() || getTypes().stream().anyMatch(type -> ! type.isBlock())) {
             throw new IllegalArgumentException();
         }
     }
