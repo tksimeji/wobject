@@ -72,7 +72,7 @@ public final class WobjectComponent implements Member {
             throw new RuntimeException(e);
         }
 
-        Wobject.setJson();
+        Wobject.saveJson();
     }
 
     @Override
@@ -110,7 +110,7 @@ public final class WobjectComponent implements Member {
         itemMeta.addEnchant(Enchantment.INFINITY, 1, false);
 
         PersistentDataContainer container = itemMeta.getPersistentDataContainer();
-        container.set(new NamespacedKey(Wobject.plugin(), "class"), PersistentDataType.STRING, getWobjectClass().getName());
+        container.set(new NamespacedKey(Wobject.plugin(), "class"), PersistentDataType.STRING, getWobjectClass().getKey().asString());
         container.set(new NamespacedKey(Wobject.plugin(), "component"), PersistentDataType.STRING, getName());
         container.set(new NamespacedKey(Wobject.plugin(), "uuid"), PersistentDataType.STRING, uuid.toString());
 

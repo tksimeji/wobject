@@ -4,6 +4,8 @@ import com.google.gson.JsonObject;
 import com.tksimeji.wobject.api.Component;
 import com.tksimeji.wobject.api.Handler;
 import com.tksimeji.wobject.api.Wobject;
+import net.kyori.adventure.key.Key;
+import net.kyori.adventure.key.KeyPattern;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -15,7 +17,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public final class WobjectClass<T> implements Type {
-    private static @NotNull Set<WobjectClass<?>> instances = new HashSet<>();
+    private static final @NotNull Set<WobjectClass<?>> instances = new HashSet<>();
 
     public static <T> @NotNull WobjectClass<T> of(@NotNull Class<T> clazz) {
         for (WobjectClass<?> instance : instances) {
@@ -27,8 +29,8 @@ public final class WobjectClass<T> implements Type {
         return new WobjectClass<>(clazz);
     }
 
-    public static @Nullable WobjectClass<?> of(@Nullable String name) {
-        return instances.stream().filter(instance -> instance.getName().equals(name)).findFirst().orElse(null);
+    public static @Nullable WobjectClass<?> of(@KeyPattern @Nullable String name) {
+        return instances.stream().filter(instance -> instance.getKey().asString().equals(name)).findFirst().orElse(null);
     }
 
     public static @NotNull Set<WobjectClass<?>> all() {
@@ -47,6 +49,10 @@ public final class WobjectClass<T> implements Type {
     private final @NotNull Map<UUID, Object> wobjects = new HashMap<>();
 
     private WobjectClass(@NotNull Class<T> clazz) {
+        if (com.tksimeji.wobject.Wobject.getLoader().isFroze()) {
+            throw new UnsupportedOperationException();
+        }
+
         if (! clazz.isAnnotationPresent(Wobject.class)) {
             throw new IllegalArgumentException();
         }
@@ -74,11 +80,15 @@ public final class WobjectClass<T> implements Type {
                         .filter(method -> method.isAnnotationPresent(Handler.Kill.class))
                         .collect(Collectors.toSet());
 
+        if (! Key.parseable(annotation.key())) {
+            throw new IllegalArgumentException();
+        }
+
         instances.add(this);
     }
 
-    public @NotNull String getName() {
-        return annotation.name();
+    public @NotNull Key getKey() {
+        return Key.key(annotation.key().contains(":") ? annotation.key() : "wobject:" + annotation.key());
     }
 
     public @NotNull UUID getUniqueId(@NotNull Object wobject) {
@@ -168,7 +178,7 @@ public final class WobjectClass<T> implements Type {
 
     public @NotNull JsonObject asJsonObject(@NotNull Object wobject) {
         JsonObject jsonObject = new JsonObject();
-        jsonObject.addProperty("name", getName());
+        jsonObject.addProperty("name", getKey().asString());
         jsonObject.addProperty("uuid", getUniqueId(wobject).toString());
 
         components.forEach(component -> jsonObject.add("@" + component.getName(), component.asJsonObject(wobject)));
@@ -188,7 +198,7 @@ public final class WobjectClass<T> implements Type {
 
         if (com.tksimeji.wobject.Wobject.getJson().asList().stream()
                 .anyMatch(element -> element.getAsJsonObject().get("uuid").getAsString().equals(uuid.toString()))) {
-            com.tksimeji.wobject.Wobject.setJson();
+            com.tksimeji.wobject.Wobject.saveJson();
         }
 
         return wobject;
@@ -241,6 +251,6 @@ public final class WobjectClass<T> implements Type {
             }
         });
 
-        com.tksimeji.wobject.Wobject.setJson();
+        com.tksimeji.wobject.Wobject.saveJson();
     }
 }
