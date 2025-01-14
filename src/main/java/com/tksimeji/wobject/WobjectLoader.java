@@ -8,13 +8,17 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
 public final class WobjectLoader {
+    private static final Logger log = LoggerFactory.getLogger(WobjectLoader.class);
     private final @NotNull Map<Key, Class<?>> map = new HashMap<>();
 
     private boolean freeze = false;
+    private boolean loading = false;
 
     WobjectLoader() {
     }
@@ -52,11 +56,14 @@ public final class WobjectLoader {
     }
 
     public void load() {
+        loading = true;
         freeze();
-        map.entrySet().forEach(entry -> WobjectClass.of(entry.getValue()));
+        map.forEach((key, value) -> WobjectClass.of(value));
 
         Wobject.getJson().asList().forEach(element -> load(element.getAsJsonObject()));
         Wobject.saveJson();
+
+        loading = false;
     }
 
     private void load(@NotNull JsonObject json) {
@@ -100,5 +107,9 @@ public final class WobjectLoader {
 
     public boolean isFroze() {
         return freeze;
+    }
+
+    public boolean isLoading() {
+        return loading;
     }
 }

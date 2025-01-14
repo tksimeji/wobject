@@ -33,8 +33,8 @@ public final class WobjectClass<T> implements Type {
         return instances.stream().filter(instance -> instance.getKey().asString().equals(name)).findFirst().orElse(null);
     }
 
-    public static @NotNull Set<WobjectClass<?>> all() {
-        return new HashSet<>(instances);
+    public static @NotNull List<WobjectClass<?>> all() {
+        return new ArrayList<>(instances);
     }
 
     private final @NotNull Class<T> clazz;
@@ -49,7 +49,7 @@ public final class WobjectClass<T> implements Type {
     private final @NotNull Map<UUID, Object> wobjects = new HashMap<>();
 
     private WobjectClass(@NotNull Class<T> clazz) {
-        if (com.tksimeji.wobject.Wobject.getLoader().isFroze()) {
+        if (! com.tksimeji.wobject.Wobject.getLoader().isLoading()) {
             throw new UnsupportedOperationException();
         }
 

@@ -14,7 +14,9 @@ public final class WobjectCommand implements CommandExecutor, TabCompleter {
     private final @NotNull Map<String, Subcommand> subcommands = new HashMap<>();
 
     public WobjectCommand() {
+        subcommand(new ClassListSubcommand());
         subcommand(new NewSubcommand());
+        subcommand(new WobjectListSubcommand());
     }
 
     private void subcommand(@NotNull Subcommand subcommand) {
