@@ -17,7 +17,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.HashMap;
 import java.util.Map;
 
-public final class ComponentUI extends ChestUI {
+public final class TypeSelectorUI extends ChestUI {
     private static final int[] slots = {10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34};
 
     private final @NotNull BlockPlaceEvent event;
@@ -31,11 +31,11 @@ public final class ComponentUI extends ChestUI {
 
     private final @NotNull Map<Integer, Material> types = new HashMap<>();
 
-    public ComponentUI(@NotNull BlockPlaceEvent event, @NotNull WobjectComponent component, @NotNull WobjectBuilder<?> builder) {
+    public TypeSelectorUI(@NotNull BlockPlaceEvent event, @NotNull WobjectComponent component, @NotNull WobjectBuilder<?> builder) {
         this(event, component, builder, 0);
     }
 
-    public ComponentUI(@NotNull BlockPlaceEvent event, @NotNull WobjectComponent component, @NotNull WobjectBuilder<?> builder, int page) {
+    public TypeSelectorUI(@NotNull BlockPlaceEvent event, @NotNull WobjectComponent component, @NotNull WobjectBuilder<?> builder, int page) {
         super(event.getPlayer());
 
         this.event = event;
@@ -73,7 +73,7 @@ public final class ComponentUI extends ChestUI {
 
     @Override
     public @NotNull Component getTitle() {
-        return Component.text("Component");
+        return Component.text("Please select a type:");
     }
 
     @Override
@@ -86,12 +86,12 @@ public final class ComponentUI extends ChestUI {
         BlockPlaceEvent placeEvent = this.event;
 
         if (event.getSlot() == slots.length) {
-            new ComponentUI(placeEvent, component, builder, Math.max(page - 1, 0));
+            new TypeSelectorUI(placeEvent, component, builder, Math.max(page - 1, 0));
             return;
         }
 
         if (event.getSlot() == slots.length + 8) {
-            new ComponentUI(placeEvent, component, builder, Math.min(page + 1, component.getTypes().size() / getSize().asInt() - 9));
+            new TypeSelectorUI(placeEvent, component, builder, Math.min(page + 1, component.getTypes().size() / getSize().asInt() - 9));
             return;
         }
 

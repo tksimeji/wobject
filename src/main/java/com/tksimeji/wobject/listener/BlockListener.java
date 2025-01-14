@@ -5,7 +5,7 @@ import com.tksimeji.wobject.WobjectBuilder;
 import com.tksimeji.wobject.api.Handler;
 import com.tksimeji.wobject.reflect.WobjectClass;
 import com.tksimeji.wobject.reflect.WobjectComponent;
-import com.tksimeji.wobject.ui.ComponentUI;
+import com.tksimeji.wobject.ui.TypeSelectorUI;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -50,7 +50,7 @@ public final class BlockListener implements Listener {
 
         if (1 < component.getTypes().size()) {
             event.setCancelled(true);
-            new ComponentUI(event, component, builder);
+            new TypeSelectorUI(event, component, builder);
             return;
         }
 
