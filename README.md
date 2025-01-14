@@ -2,7 +2,7 @@
 
 A Minecraft library that links objects in the world with Java objects
 
-![Version](https://img.shields.io/badge/version-0.0.0-blue?style=flat-square)
+![Version](https://img.shields.io/badge/version-0.1.0-blue?style=flat-square)
 ![Licence](https://img.shields.io/badge/licence-MIT-red?style=flat-square)
 
 ## Get Started
