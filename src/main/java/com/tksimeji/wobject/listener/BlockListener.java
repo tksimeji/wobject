@@ -6,6 +6,8 @@ import com.tksimeji.wobject.api.Handler;
 import com.tksimeji.wobject.reflect.WobjectClass;
 import com.tksimeji.wobject.reflect.WobjectComponent;
 import com.tksimeji.wobject.ui.TypeSelectorUI;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -59,13 +61,21 @@ public final class BlockListener implements Listener {
         player.getInventory().setItemInMainHand(null);
     }
 
-    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onBlockBreak(@NotNull BlockBreakEvent event) {
         Block block = event.getBlock();
         Object wobject = Wobject.get(block);
 
         if (wobject == null) {
             Optional.ofNullable(WobjectBuilder.get(block)).ifPresent(WobjectBuilder::kill);
+            return;
+        }
+
+        Player player = event.getPlayer();
+
+        if (! player.hasPermission("wobject.break")) {
+            player.sendMessage(Component.text("You do not have permission to do this.").color(NamedTextColor.RED));
+            event.setCancelled(true);
             return;
         }
 

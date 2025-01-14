@@ -6,3 +6,11 @@ commands:
   wobject:
     description: Command set for Wobject.
     usage: /wobject <subcommand> [args...]
+permissions:
+  wobject.*:
+    default: op
+    children:
+      wobject.class-list: true
+      wobject.break: true
+      wobject.new: true
+      wobject.wobject-list: true

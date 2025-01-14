@@ -37,6 +37,11 @@ public final class WobjectCommand implements CommandExecutor, TabCompleter {
             return true;
         }
 
+        if (! sender.hasPermission("wobject." + subcommand.getName())) {
+            sender.sendMessage(Component.text("You do not have permission to do this.").color(NamedTextColor.RED));
+            return true;
+        }
+
         String[] args2 = new String[args.length - 1];
         System.arraycopy(args, 1, args2, 0, args2.length);
         subcommand.onCommand(sender, command, label, args2);
@@ -46,12 +51,15 @@ public final class WobjectCommand implements CommandExecutor, TabCompleter {
     @Override
     public @NotNull List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (args.length == 1) {
-            return new ArrayList<>(subcommands.keySet());
+            return new ArrayList<>(subcommands.entrySet().stream()
+                    .filter(entry -> sender.hasPermission("wobject." + entry.getValue().getName()))
+                    .map(Map.Entry::getKey)
+                    .toList());
         }
 
         Subcommand subcommand = subcommands.get(args[0]);
 
-        if (subcommand == null) {
+        if (subcommand == null || ! sender.hasPermission("wobject." + subcommand.getName())) {
             return List.of();
         }
 
