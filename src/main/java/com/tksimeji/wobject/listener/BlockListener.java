@@ -10,6 +10,7 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
@@ -26,7 +27,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 public final class BlockListener implements Listener {
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onBlockPlace(@NotNull BlockPlaceEvent event) {
         Player player = event.getPlayer();
         ItemStack itemStack = player.getInventory().getItemInMainHand();
@@ -58,7 +59,7 @@ public final class BlockListener implements Listener {
         player.getInventory().setItemInMainHand(null);
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onBlockBreak(@NotNull BlockBreakEvent event) {
         Block block = event.getBlock();
         Object wobject = Wobject.get(block);
@@ -72,7 +73,7 @@ public final class BlockListener implements Listener {
         clazz.kill(wobject);
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR)
     public void onBlockRedstone(@NotNull BlockRedstoneEvent event) {
         Object wobject = Wobject.get(event.getBlock());
 

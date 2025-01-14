@@ -3,6 +3,7 @@ package com.tksimeji.wobject.listener;
 import com.tksimeji.wobject.ui.ChestUI;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
@@ -11,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Optional;
 
 public final class InventoryListener implements Listener {
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onInventoryClick(@NotNull InventoryClickEvent event) {
         ChestUI ui = ChestUI.getInstance(event.getClickedInventory());
 
@@ -23,7 +24,7 @@ public final class InventoryListener implements Listener {
         event.setCancelled(true);
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.HIGHEST)
     public void onInventoryClose(@NotNull InventoryCloseEvent event) {
         if (! (event.getPlayer() instanceof Player player)) {
             return;

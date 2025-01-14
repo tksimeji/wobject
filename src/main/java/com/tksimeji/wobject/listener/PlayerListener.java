@@ -6,6 +6,7 @@ import com.tksimeji.wobject.reflect.WobjectClass;
 import com.tksimeji.wobject.reflect.WobjectComponent;
 import org.bukkit.block.Block;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.jetbrains.annotations.NotNull;
@@ -15,7 +16,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public final class PlayerListener implements Listener {
-    @EventHandler
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerInteract(@NotNull PlayerInteractEvent event) {
         Block block = event.getClickedBlock();
         Object wobject = Wobject.get(block);
