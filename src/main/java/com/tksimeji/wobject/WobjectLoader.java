@@ -8,6 +8,7 @@ import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Optional;
 import java.util.UUID;
 
 public final class WobjectLoader {
@@ -25,18 +26,23 @@ public final class WobjectLoader {
 
         Object wobject = clazz.newInstance(UUID.fromString(json.get("uuid").getAsString()));
 
-        clazz.getComponents().forEach(component -> {
-            JsonObject componentJson = json.getAsJsonObject("@" + component.getName());
-            Block block = new Location(Bukkit.getWorld(Key.key(componentJson.get("world").getAsString())),
-                    componentJson.get("x").getAsInt(),
-                    componentJson.get("y").getAsInt(),
-                    componentJson.get("z").getAsInt()).getBlock();
+        clazz.getComponents().stream()
+                .filter(component -> json.has("@" + component.getName()) && json.get("@" + component.getName()).isJsonObject())
+                .forEach(component -> {
+                    JsonObject componentJson = json.getAsJsonObject("@" + component.getName());
 
-            if (! component.getTypes().contains(block.getType())) {
-                throw new IllegalStateException();
-            }
+                    if (componentJson == null) {
+                        return;
+                    }
 
-            component.setValue(wobject, block);
-        });
+                    Block block = new Location(Bukkit.getWorld(Key.key(componentJson.get("world").getAsString())),
+                            componentJson.get("x").getAsInt(),
+                            componentJson.get("y").getAsInt(),
+                            componentJson.get("z").getAsInt()).getBlock();
+
+                    if (component.getTypes().contains(block.getType())) {
+                        component.setValue(wobject, block);
+                    }
+                });
     }
 }

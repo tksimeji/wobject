@@ -6,6 +6,7 @@ import org.bukkit.inventory.Inventory;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -28,7 +29,7 @@ public abstract class ChestUI implements IChestUI {
         inventory = Bukkit.createInventory(null, getSize().asInt(), getTitle());
 
         instances.add(this);
-        instances.stream()
+        new ArrayList<>(instances).stream()
                 .filter(instance -> instance != this && instance.getPlayer() == player)
                 .forEach(ChestUI::close);
 

@@ -2,6 +2,7 @@ package com.tksimeji.wobject;
 
 import com.tksimeji.wobject.reflect.WobjectClass;
 import com.tksimeji.wobject.reflect.WobjectComponent;
+import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -17,6 +18,22 @@ public final class WobjectBuilder<T> extends HashMap<WobjectComponent, Block> {
 
     public static @Nullable WobjectBuilder<?> get(@Nullable UUID uuid) {
         return instances.stream().filter(instance -> instance.getUniqueId().equals(uuid)).findFirst().orElse(null);
+    }
+
+    public static @Nullable WobjectBuilder<?> get(@Nullable Location location) {
+        return instances.stream().filter(instance -> instance.values().stream().anyMatch(block -> block.getLocation().equals(location))).findFirst().orElse(null);
+    }
+
+    public static @Nullable WobjectBuilder<?> get(@Nullable Block block) {
+        if (block == null) {
+            return null;
+        }
+
+        return get(block.getLocation());
+    }
+
+    public static @NotNull Set<WobjectBuilder<?>> all() {
+        return new HashSet<>(instances);
     }
 
     private final @NotNull UUID uuid = UUID.randomUUID();
@@ -50,9 +67,13 @@ public final class WobjectBuilder<T> extends HashMap<WobjectComponent, Block> {
         if (clazz.getComponents().size() <= size()) {
             T wobject = clazz.newInstance(uuid);
             forEach((component, block) -> component.setValue(wobject, block));
-            instances.remove(this);
+            kill();
         }
 
         return result;
+    }
+
+    public void kill() {
+        instances.removeIf(instance -> instance == this);
     }
 }

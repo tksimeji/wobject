@@ -11,6 +11,10 @@ import java.net.URL;
 import java.net.URLConnection;
 
 public final class ResourceUtility {
+    private ResourceUtility() {
+        throw new UnsupportedOperationException();
+    }
+
     public static @NotNull File getResource(@NotNull String path) {
         return new File(Wobject.plugin().getDataFolder(), path);
     }
@@ -84,6 +88,4 @@ public final class ResourceUtility {
             throw new RuntimeException(e);
         }
     }
-
-    private ResourceUtility() { throw new UnsupportedOperationException(); }
 }

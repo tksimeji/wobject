@@ -7,8 +7,8 @@ import com.tksimeji.wobject.reflect.WobjectComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -20,11 +20,15 @@ public final class ItemStackRunnable extends BukkitRunnable {
     @Override
     public void run() {
         for (Player player : Bukkit.getOnlinePlayers()) {
-            Inventory inventory = player.getInventory();
+            PlayerInventory inventory = player.getInventory();
             int index = -1;
 
             for (ItemStack itemStack : inventory) {
                 index ++;
+
+                if (index == inventory.getHeldItemSlot()) {
+                    continue;
+                }
 
                 if (itemStack == null || ! itemStack.hasItemMeta()) {
                     continue;

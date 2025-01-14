@@ -2,16 +2,15 @@ package com.tksimeji.wobject.reflect;
 
 import com.google.gson.JsonObject;
 import com.tksimeji.wobject.api.Component;
+import com.tksimeji.wobject.api.Handler;
 import com.tksimeji.wobject.api.Wobject;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Type;
+import java.lang.reflect.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -19,11 +18,13 @@ public final class WobjectClass<T> implements Type {
     private static @NotNull Set<WobjectClass<?>> instances = new HashSet<>();
 
     public static <T> @NotNull WobjectClass<T> of(@NotNull Class<T> clazz) {
-        return instances.stream()
-                .filter(instance -> instance.getJavaClass() == clazz)
-                .map(instance -> (WobjectClass<T>) instance)
-                .findFirst()
-                .orElse(new WobjectClass<>(clazz));
+        for (WobjectClass<?> instance : instances) {
+            if (instance.getJavaClass() == clazz) {
+                return (WobjectClass<T>) instance;
+            }
+        }
+
+        return new WobjectClass<>(clazz);
     }
 
     public static @Nullable WobjectClass<?> of(@Nullable String name) {
@@ -38,6 +39,10 @@ public final class WobjectClass<T> implements Type {
     private final @NotNull Wobject annotation;
 
     private final @NotNull Set<WobjectComponent> components;
+
+    private final @NotNull Set<Method> interactHandlers;
+    private final @NotNull Set<Method> redstoneHandlers;
+    private final @NotNull Set<Method> killHandlers;
 
     private final @NotNull Map<UUID, Object> wobjects = new HashMap<>();
 
@@ -55,6 +60,18 @@ public final class WobjectClass<T> implements Type {
         components = getFields().stream()
                         .filter(field -> field.isAnnotationPresent(Component.class) && Block.class.isAssignableFrom(field.getType()))
                         .map(WobjectComponent::new)
+                        .collect(Collectors.toSet());
+
+        interactHandlers = getMethods().stream()
+                        .filter(method -> method.isAnnotationPresent(Handler.Interact.class))
+                        .collect(Collectors.toSet());
+
+        redstoneHandlers = getMethods().stream()
+                        .filter(method -> method.isAnnotationPresent(Handler.Redstone.class))
+                        .collect(Collectors.toSet());
+
+        killHandlers = getMethods().stream()
+                        .filter(method -> method.isAnnotationPresent(Handler.Kill.class))
                         .collect(Collectors.toSet());
 
         instances.add(this);
@@ -84,12 +101,43 @@ public final class WobjectClass<T> implements Type {
         return new HashSet<>(wobjects.values());
     }
 
-    public @Nullable WobjectComponent getComponent(@NotNull String name) {
+    public @Nullable WobjectComponent getComponent(@Nullable String name) {
         return components.stream().filter(component -> component.getName().equals(name)).findFirst().orElse(null);
+    }
+
+    public @Nullable WobjectComponent getComponent(@Nullable Object wobject, @Nullable Location location) {
+        if (wobject == null || location == null) {
+            return null;
+        }
+
+        return components.stream().filter(component -> {
+            Block block = component.getValue(wobject);
+            return block != null && block.getLocation().equals(location);
+        }).findFirst().orElse(null);
+    }
+
+    public @Nullable WobjectComponent getComponent(@Nullable Object wobject, @Nullable Block block) {
+        if (block == null) {
+            return null;
+        }
+
+        return getComponent(wobject, block.getLocation());
     }
 
     public @NotNull Set<WobjectComponent> getComponents() {
         return new HashSet<>(components);
+    }
+
+    public @NotNull Set<Method> getInteractHandlers() {
+        return interactHandlers;
+    }
+
+    public @NotNull Set<Method> getRedstoneHandlers() {
+        return redstoneHandlers;
+    }
+
+    public @NotNull Set<Method> getKillHandlers() {
+        return killHandlers;
     }
 
     public @NotNull Set<Field> getFields() {
@@ -146,10 +194,43 @@ public final class WobjectClass<T> implements Type {
         return wobject;
     }
 
-    public void kill(@NotNull Object wobject) {
-        if (! wobjects.containsValue(wobject)) {
+    public void call(@NotNull Object wobject, @NotNull Set<Method> handlers, @NotNull Object... args) {
+        if (of(wobject.getClass()) != this || ! wobjects.containsValue(wobject)) {
             throw new IllegalArgumentException();
         }
+
+        for (Method handler : handlers) {
+            handler.setAccessible(true);
+
+            Parameter[] parameters = handler.getParameters();
+            Object[] assembledArgs = new Object[parameters.length];
+
+            for (int i = 0; i < assembledArgs.length; i ++) {
+                Parameter parameter = parameters[i];
+                Class<?> type = parameter.getType();
+
+                int finalI = i;
+
+                Arrays.stream(args)
+                        .filter(arg -> type.isAssignableFrom(arg.getClass()))
+                        .findFirst()
+                        .ifPresentOrElse(arg -> assembledArgs[finalI] = arg, () -> assembledArgs[finalI] = null);
+            }
+
+            try {
+                handler.invoke(wobject, assembledArgs);
+            } catch (InvocationTargetException | IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    public void kill(@NotNull Object wobject) {
+        if (of(wobject.getClass()) != this || ! wobjects.containsValue(wobject)) {
+            throw new IllegalArgumentException();
+        }
+
+        call(wobject, getKillHandlers());
 
         wobjects.remove(getUniqueId(wobject));
         getComponents().forEach(component -> {

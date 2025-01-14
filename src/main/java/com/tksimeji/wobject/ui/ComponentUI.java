@@ -7,7 +7,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
-import org.bukkit.entity.Player;
+import org.bukkit.block.data.BlockData;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -19,22 +20,29 @@ import java.util.Map;
 public final class ComponentUI extends ChestUI {
     private static final int[] slots = {10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25, 28, 29, 30, 31, 32, 33, 34};
 
-    private final @NotNull WobjectComponent component;
+    private final @NotNull BlockPlaceEvent event;
     private final @NotNull Block block;
-    private final @NotNull WobjectBuilder<?> builder;
+    private final @NotNull BlockData data;
 
+    private final @NotNull WobjectComponent component;
+    private final @NotNull WobjectBuilder<?> builder;
     private final int page;
+
 
     private final @NotNull Map<Integer, Material> types = new HashMap<>();
 
-    public ComponentUI(@NotNull Player player, @NotNull WobjectComponent component, @NotNull Block block, @NotNull WobjectBuilder<?> builder) {
-        this(player, component, block, builder, 0);
+    public ComponentUI(@NotNull BlockPlaceEvent event, @NotNull WobjectComponent component, @NotNull WobjectBuilder<?> builder) {
+        this(event, component, builder, 0);
     }
 
-    public ComponentUI(@NotNull Player player, @NotNull WobjectComponent component, @NotNull Block block, @NotNull WobjectBuilder<?> builder, int page) {
-        super(player);
+    public ComponentUI(@NotNull BlockPlaceEvent event, @NotNull WobjectComponent component, @NotNull WobjectBuilder<?> builder, int page) {
+        super(event.getPlayer());
+
+        this.event = event;
+        block = event.getBlock();
+        data = block.getBlockData().clone();
+
         this.component = component;
-        this.block = block;
         this.builder = builder;
         this.page = page;
 
@@ -75,13 +83,15 @@ public final class ComponentUI extends ChestUI {
 
     @Override
     public void onClick(@NotNull InventoryClickEvent event) {
+        BlockPlaceEvent placeEvent = this.event;
+
         if (event.getSlot() == slots.length) {
-            new ComponentUI(player, component, block, builder, Math.max(page - 1, 0));
+            new ComponentUI(placeEvent, component, builder, Math.max(page - 1, 0));
             return;
         }
 
         if (event.getSlot() == slots.length + 8) {
-            new ComponentUI(player, component, block, builder, Math.min(page + 1, component.getTypes().size() / getSize().asInt() - 9));
+            new ComponentUI(placeEvent, component, builder, Math.min(page + 1, component.getTypes().size() / getSize().asInt() - 9));
             return;
         }
 
@@ -91,8 +101,13 @@ public final class ComponentUI extends ChestUI {
             return;
         }
 
-        close();
         block.setType(type);
+        BlockData data = block.getBlockData();
+        this.data.copyTo(data);
+        block.setBlockData(data);
+
+        close();
+
         player.getInventory().setItemInMainHand(null);
         builder.put(component, block);
     }
