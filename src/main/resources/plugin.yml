@@ -1,5 +1,5 @@
 name: Wobject
-version: '0.0.0'
+version: '${version}'
 main: com.tksimeji.wobject.Wobject
 api-version: '1.21'
 commands:
