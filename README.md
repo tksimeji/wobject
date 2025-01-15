@@ -52,6 +52,34 @@ For a plugin that uses Wobject to work, Wobject must be installed as a plugin on
 Installing it on the server is no different from a normal plugin.
 Just download the jar file from "Releases" and place it in the plugins directory on your server.
 
+## Commands
+
+All commands are provided as subcommands of `/wobject`.
+
+```
+/wobject <subcommand> [args...]
+```
+
+### /wobject class-list
+
+Lists the wobject classes known to Wobject.
+
+permission: `wobject.class-list`
+
+### /wobject new <class\>
+
+Create a new wobject.
+To destory a created wobject, you need the permission `wobject.break`.
+
+permission: `wobject.new`
+
+### /wobject wobject-list
+
+Lists the wobjects present on the server.
+
+permission: `wobject.wobject-list`
+
+
 ## Usage
 
 ### 1. Define the Wobject class.
@@ -113,30 +141,3 @@ public void onEnable() {
     Wobject.register(MyWobject.class);
 }
 ```
-
-## Commands
-
-All commands are provided as subcommands of `/wobject`.
-
-```
-/wobject <subcommand> [args...]
-```
-
-### /wobject class-list
-
-Lists the wobject classes known to Wobject.
-
-permission: `wobject.class-list`
-
-### /wobject new <class\>
-
-Create a new wobject.
-To destory a created wobject, you need the permission `wobject.break`.
-
-permission: `wobject.new`
-
-### /wobject wobject-list
-
-Lists the wobjects present on the server.
-
-permission: `wobject.wobject-list`
