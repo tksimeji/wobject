@@ -115,7 +115,7 @@ It is declared with the `com.tksimeji.wobject.api.Handler.*` annotation.
 // The values that can be obtained from the arguments vary depending on the type of handler.
 
 @Handler.Interact(component = "component_name")
-public void handler1(BlockBreakEvent event, Player player, Block block) {
+public void handler1(PlayerInteractEvent event, Player player, Block block) {
     // Called when the component is interacted with.
 }
 
