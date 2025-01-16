@@ -92,8 +92,6 @@ public final class WobjectBuilder<T> extends HashMap<IWobjectComponent<?, ?, ?>,
             throw new UnsupportedOperationException();
         }
 
-        System.out.println(size() + " / " + clazz.getComponents().size());
-
         if (clazz.getComponents().size() <= size()) {
             T wobject = clazz.newInstance(uuid);
             forEach((k, v) -> {
@@ -104,7 +102,6 @@ public final class WobjectBuilder<T> extends HashMap<IWobjectComponent<?, ?, ?>,
                 }
             });
             kill();
-            System.out.println("created!");
         }
 
         return result;
