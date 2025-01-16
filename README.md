@@ -2,7 +2,7 @@
 
 A Minecraft library that links objects in the world with Java objects
 
-![Version](https://img.shields.io/badge/version-0.1.0-blue?style=flat-square)
+![Version](https://img.shields.io/badge/version-0.2.0_dev-blue?style=flat-square)
 ![Licence](https://img.shields.io/badge/licence-MIT-red?style=flat-square)
 
 ## Get Started
@@ -96,7 +96,7 @@ public class MyWobject {
 
 Components are the building blocks of an object. They can be one or more types.
 
-These are declared as fields of type `org.bukkit.block.Block` with the `com.tksimeji.wobject.api.Component` annotation 
+These are declared as fields of type `org.bukkit.block.Block` with the `com.tksimeji.wobject.api.BlockComponent` annotation 
 and are automatically injected when an instance is created.
 
 ```java

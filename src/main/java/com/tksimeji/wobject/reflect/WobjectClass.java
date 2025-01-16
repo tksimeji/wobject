@@ -1,14 +1,15 @@
 package com.tksimeji.wobject.reflect;
 
 import com.google.gson.JsonObject;
-import com.tksimeji.wobject.api.Component;
+import com.tksimeji.wobject.api.BlockComponent;
+import com.tksimeji.wobject.api.EntityComponent;
 import com.tksimeji.wobject.api.Handler;
 import com.tksimeji.wobject.api.Wobject;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.key.KeyPattern;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Entity;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -40,7 +41,7 @@ public final class WobjectClass<T> implements Type {
     private final @NotNull Class<T> clazz;
     private final @NotNull Wobject annotation;
 
-    private final @NotNull Set<WobjectComponent> components;
+    private final @NotNull Set<IWobjectComponent<?, ?, ?>> components;
 
     private final @NotNull Set<Method> interactHandlers;
     private final @NotNull Set<Method> redstoneHandlers;
@@ -64,9 +65,17 @@ public final class WobjectClass<T> implements Type {
         this.clazz = clazz;
         annotation = clazz.getAnnotation(Wobject.class);
         components = getFields().stream()
-                        .filter(field -> field.isAnnotationPresent(Component.class) && Block.class.isAssignableFrom(field.getType()))
-                        .map(WobjectComponent::new)
-                        .collect(Collectors.toSet());
+                        .filter(field -> (field.isAnnotationPresent(BlockComponent.class) && Block.class.isAssignableFrom(field.getType())) ||
+                                (field.isAnnotationPresent(EntityComponent.class) && Entity.class.isAssignableFrom(field.getType())))
+                        .map(field -> {
+                            if (field.isAnnotationPresent(BlockComponent.class)) {
+                                return new WobjectBlockComponent(field);
+                            } else if (field.isAnnotationPresent(EntityComponent.class)) {
+                                return new WobjectEntityComponent(field);
+                            }
+
+                            throw new UnsupportedOperationException();
+                        }).collect(Collectors.toSet());
 
         interactHandlers = getMethods().stream()
                         .filter(method -> method.isAnnotationPresent(Handler.Interact.class))
@@ -111,31 +120,56 @@ public final class WobjectClass<T> implements Type {
         return new HashSet<>(wobjects.values());
     }
 
-    public @Nullable WobjectComponent getComponent(@Nullable String name) {
+    public @Nullable IWobjectComponent<?, ?, ?> getComponent(@Nullable String name) {
         return components.stream().filter(component -> component.getName().equals(name)).findFirst().orElse(null);
     }
 
-    public @Nullable WobjectComponent getComponent(@Nullable Object wobject, @Nullable Location location) {
-        if (wobject == null || location == null) {
+    public @NotNull Set<IWobjectComponent<?, ?, ?>> getComponents() {
+        return new HashSet<>(components);
+    }
+
+    public @Nullable WobjectBlockComponent getBlockComponent(@Nullable String name) {
+        return getComponent(name) instanceof WobjectBlockComponent blockComponent ? blockComponent : null;
+    }
+
+    public @Nullable WobjectBlockComponent getBlockComponent(@Nullable Object wobject, @Nullable Block block) {
+        if (wobject == null || block == null) {
             return null;
         }
 
-        return components.stream().filter(component -> {
-            Block block = component.getValue(wobject);
-            return block != null && block.getLocation().equals(location);
+        return getBlockComponents().stream().filter(component -> {
+            Block value = component.getValue(wobject);
+            return value != null && value.getLocation().equals(block.getLocation());
         }).findFirst().orElse(null);
     }
 
-    public @Nullable WobjectComponent getComponent(@Nullable Object wobject, @Nullable Block block) {
-        if (block == null) {
+    public @NotNull Set<WobjectBlockComponent> getBlockComponents() {
+        return components.stream()
+                .filter(component -> component instanceof WobjectBlockComponent)
+                .map(component -> (WobjectBlockComponent) component)
+                .collect(Collectors.toSet());
+    }
+
+    public @Nullable WobjectEntityComponent getEntityComponent(@Nullable String name) {
+        return getComponent(name) instanceof WobjectEntityComponent entityComponent ? entityComponent : null;
+    }
+
+    public @Nullable WobjectEntityComponent getEntityComponent(@Nullable Object wobject, @Nullable Entity entity) {
+        if (wobject == null || entity == null) {
             return null;
         }
 
-        return getComponent(wobject, block.getLocation());
+        return getEntityComponents().stream().filter(component -> {
+            Entity value = component.getValue(wobject);
+            return value != null && value.getUniqueId().equals(entity.getUniqueId());
+        }).findFirst().orElse(null);
     }
 
-    public @NotNull Set<WobjectComponent> getComponents() {
-        return new HashSet<>(components);
+    public @NotNull Set<WobjectEntityComponent> getEntityComponents() {
+        return components.stream()
+                .filter(component -> component instanceof WobjectEntityComponent)
+                .map(component -> (WobjectEntityComponent) component)
+                .collect(Collectors.toSet());
     }
 
     public @NotNull Set<Method> getInteractHandlers() {
@@ -243,12 +277,13 @@ public final class WobjectClass<T> implements Type {
         call(wobject, getKillHandlers());
 
         wobjects.remove(getUniqueId(wobject));
-        getComponents().forEach(component -> {
-            Block block = component.getValue(wobject);
 
-            if (block != null) {
-                block.setType(Material.AIR);
-            }
+        getBlockComponents().forEach(component -> {
+            Optional.ofNullable(component.getValue(wobject)).ifPresent(value -> value.setType(Material.AIR));
+        });
+
+        getEntityComponents().forEach(component -> {
+            Optional.ofNullable(component.getValue(wobject)).ifPresent(Entity::remove);
         });
 
         com.tksimeji.wobject.Wobject.saveJson();

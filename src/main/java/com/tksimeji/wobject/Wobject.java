@@ -14,8 +14,8 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
-import org.bukkit.Location;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Entity;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -51,19 +51,18 @@ public final class Wobject extends JavaPlugin {
                 .orElse(null);
     }
 
-    public static @Nullable Object get(@Nullable Location location) {
+    public static @Nullable Object get(@Nullable Block block) {
         return all().stream()
-                .filter(wobject -> WobjectClass.of(wobject.getClass()).getComponent(wobject, location) != null)
+                .filter(wobject -> WobjectClass.of(wobject.getClass()).getBlockComponent(wobject, block) != null)
                 .findFirst()
                 .orElse(null);
     }
 
-    public static @Nullable Object get(@Nullable Block block) {
-        if (block == null) {
-            return null;
-        }
-
-        return get(block.getLocation());
+    public static @Nullable Object get(@Nullable Entity entity) {
+        return all().stream()
+                .filter(wobject -> WobjectClass.of(wobject.getClass()).getEntityComponent(wobject, entity) != null)
+                .findFirst()
+                .orElse(null);
     }
 
     public static @NotNull List<Object> all() {

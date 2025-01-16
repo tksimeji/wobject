@@ -1,7 +1,7 @@
 package com.tksimeji.wobject.ui;
 
 import com.tksimeji.wobject.WobjectBuilder;
-import com.tksimeji.wobject.reflect.WobjectComponent;
+import com.tksimeji.wobject.reflect.WobjectBlockComponent;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -24,18 +24,18 @@ public final class TypeSelectorUI extends ChestUI {
     private final @NotNull Block block;
     private final @NotNull BlockData data;
 
-    private final @NotNull WobjectComponent component;
+    private final @NotNull WobjectBlockComponent component;
     private final @NotNull WobjectBuilder<?> builder;
     private final int page;
 
 
     private final @NotNull Map<Integer, Material> types = new HashMap<>();
 
-    public TypeSelectorUI(@NotNull BlockPlaceEvent event, @NotNull WobjectComponent component, @NotNull WobjectBuilder<?> builder) {
+    public TypeSelectorUI(@NotNull BlockPlaceEvent event, @NotNull WobjectBlockComponent component, @NotNull WobjectBuilder<?> builder) {
         this(event, component, builder, 0);
     }
 
-    public TypeSelectorUI(@NotNull BlockPlaceEvent event, @NotNull WobjectComponent component, @NotNull WobjectBuilder<?> builder, int page) {
+    public TypeSelectorUI(@NotNull BlockPlaceEvent event, @NotNull WobjectBlockComponent component, @NotNull WobjectBuilder<?> builder, int page) {
         super(event.getPlayer());
 
         this.event = event;

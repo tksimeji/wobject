@@ -2,8 +2,8 @@ package com.tksimeji.wobject.runnable;
 
 import com.tksimeji.wobject.Wobject;
 import com.tksimeji.wobject.WobjectBuilder;
+import com.tksimeji.wobject.reflect.WobjectBlockComponent;
 import com.tksimeji.wobject.reflect.WobjectClass;
-import com.tksimeji.wobject.reflect.WobjectComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
@@ -47,8 +47,8 @@ public final class ItemStackRunnable extends BukkitRunnable {
                 }
 
 
-                WobjectComponent component = clazz.getComponent(Objects.requireNonNull(container.get(new NamespacedKey(Wobject.plugin(), "component"), PersistentDataType.STRING)));
-                UUID uuid = UUID.fromString(Objects.requireNonNull(container.get(new NamespacedKey(Wobject.plugin(), "uuid"), PersistentDataType.STRING)));
+                WobjectBlockComponent component = clazz.getBlockComponent(Objects.requireNonNull(container.get(new NamespacedKey(Wobject.plugin(), "component"), PersistentDataType.STRING)));
+                UUID uuid = UUID.fromString(Objects.requireNonNull(container.get(new NamespacedKey(Wobject.plugin(), "builder"), PersistentDataType.STRING)));
 
                 WobjectBuilder<?> builder = WobjectBuilder.get(uuid);
 

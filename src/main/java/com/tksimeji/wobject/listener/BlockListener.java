@@ -3,8 +3,8 @@ package com.tksimeji.wobject.listener;
 import com.tksimeji.wobject.Wobject;
 import com.tksimeji.wobject.WobjectBuilder;
 import com.tksimeji.wobject.api.Handler;
+import com.tksimeji.wobject.reflect.WobjectBlockComponent;
 import com.tksimeji.wobject.reflect.WobjectClass;
-import com.tksimeji.wobject.reflect.WobjectComponent;
 import com.tksimeji.wobject.ui.TypeSelectorUI;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -39,13 +39,13 @@ public final class BlockListener implements Listener {
             return;
         }
 
-        WobjectBuilder<?> builder = WobjectBuilder.get(UUID.fromString(container.get(new NamespacedKey(Wobject.plugin(), "uuid"), PersistentDataType.STRING)));
+        WobjectBuilder<?> builder = WobjectBuilder.get(UUID.fromString(container.get(new NamespacedKey(Wobject.plugin(), "builder"), PersistentDataType.STRING)));
 
         if (builder == null) {
             return;
         }
 
-        WobjectComponent component = builder.getWobjectClass().getComponent(container.get(new NamespacedKey(Wobject.plugin(), "component"), PersistentDataType.STRING));
+        WobjectBlockComponent component = builder.getWobjectClass().getBlockComponent(container.get(new NamespacedKey(Wobject.plugin(), "component"), PersistentDataType.STRING));
 
         if (component == null) {
             return;
@@ -92,7 +92,7 @@ public final class BlockListener implements Listener {
         }
 
         WobjectClass<?> clazz = WobjectClass.of(wobject.getClass());
-        WobjectComponent component = clazz.getComponent(wobject, event.getBlock());
+        WobjectBlockComponent component = clazz.getBlockComponent(wobject, event.getBlock());
 
         if (component == null) {
             return;
