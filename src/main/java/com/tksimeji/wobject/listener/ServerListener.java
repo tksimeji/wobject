@@ -21,8 +21,11 @@ public final class ServerListener implements Listener {
 
     @EventHandler
     public void onServerTickStart(@NotNull ServerTickStartEvent event) {
-        Wobject.all().forEach(wobject -> {
-            WobjectClass.of(wobject.getClass()).call(wobject, new TickEvent(event.getTickNumber()));
-        });
+        Wobject.gc();
+
+        for (Object wobject : Wobject.all()) {
+            WobjectClass<?> clazz = WobjectClass.of(wobject.getClass());
+            clazz.call(wobject, new TickEvent(event.getTickNumber()));
+        }
     }
 }

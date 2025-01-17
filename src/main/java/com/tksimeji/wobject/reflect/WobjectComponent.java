@@ -62,6 +62,11 @@ public abstract class WobjectComponent<V, E extends Enum<?>, A extends Annotatio
     }
 
     @Override
+    public boolean hasValue(@NotNull Object wobject) {
+        return getValue(wobject) != null;
+    }
+
+    @Override
     public @NotNull A getAnnotation() {
         return annotation;
     }

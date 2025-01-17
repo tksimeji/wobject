@@ -207,7 +207,6 @@ public final class WobjectClass<T> implements Type {
 
         try {
             wobject = clazz.getConstructor().newInstance();
-            wobjects.put(uuid, wobject);
         } catch (InvocationTargetException | InstantiationException | IllegalAccessException | NoSuchMethodException e) {
             throw new RuntimeException(e);
         }
@@ -217,6 +216,7 @@ public final class WobjectClass<T> implements Type {
             com.tksimeji.wobject.Wobject.saveJson();
         }
 
+        wobjects.put(uuid, wobject);
         return wobject;
     }
 

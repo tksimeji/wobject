@@ -10,6 +10,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Field;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 public final class WobjectBlockComponent extends WobjectComponent<Block, Material, BlockComponent> {
@@ -35,6 +36,11 @@ public final class WobjectBlockComponent extends WobjectComponent<Block, Materia
         }
 
         super.setValue(wobject, value);
+    }
+
+    @Override
+    public boolean isValidValue(@NotNull Object wobject) {
+        return hasValue(wobject) && getTypes().contains(Objects.requireNonNull(getValue(wobject)).getType());
     }
 
     @Override

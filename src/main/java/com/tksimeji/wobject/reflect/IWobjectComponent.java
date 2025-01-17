@@ -16,6 +16,10 @@ public interface IWobjectComponent<V, E extends Enum<?>, A extends Annotation> e
 
     void setValue(@NotNull Object wobject, @Nullable V value);
 
+    boolean hasValue(@NotNull Object wobject);
+
+    boolean isValidValue(@NotNull Object wobject);
+
     @Nullable E getType(@NotNull Object wobject);
 
     @NotNull List<E> getTypes();
