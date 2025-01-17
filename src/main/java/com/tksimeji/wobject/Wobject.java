@@ -65,6 +65,10 @@ public final class Wobject extends JavaPlugin {
     }
 
     public static void gc() {
+        if (! getLoader().isLoaded()) {
+            return;
+        }
+
         for (Object wobject : all()) {
             WobjectClass<?> clazz = WobjectClass.of(wobject.getClass());
 
@@ -79,7 +83,7 @@ public final class Wobject extends JavaPlugin {
     }
 
     public static void register(@NotNull Class<?> clazz) {
-        loader.register(clazz);
+        loader.addClass(clazz);
     }
 
     public static @NotNull WobjectLoader getLoader() {

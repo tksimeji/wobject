@@ -22,10 +22,12 @@ public final class WobjectLoader {
     private boolean freeze = false;
     private boolean loading = false;
 
+    private boolean complete = false;
+
     WobjectLoader() {
     }
 
-    public void register(@NotNull Class<?> clazz) {
+    public void addClass(@NotNull Class<?> clazz) {
         if (freeze) {
             throw new UnsupportedOperationException("The registry is frozen and no further changes can be made.");
         }
@@ -66,6 +68,7 @@ public final class WobjectLoader {
         Wobject.saveJson();
 
         loading = false;
+        complete = true;
     }
 
     private void load(@NotNull JsonObject json) {
@@ -133,5 +136,9 @@ public final class WobjectLoader {
 
     public boolean isLoading() {
         return loading;
+    }
+
+    public boolean isLoaded() {
+        return complete;
     }
 }
