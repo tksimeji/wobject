@@ -53,7 +53,7 @@ public final class WobjectListSubcommand implements Subcommand {
             }
 
             sender.sendMessage(Component.text(clazz.getUniqueId(wobject).toString()).color(TextColor.color(2, 134, 206)));
-            sender.sendMessage(Component.text(" - ").color(NamedTextColor.DARK_GRAY).append(Component.space()).append(Component.text("Wobject class: " + clazz.getKey().asString()).color(NamedTextColor.GRAY)));
+            sender.sendMessage(Component.text(" - ").color(NamedTextColor.DARK_GRAY).append(Component.text("Wobject class: " + clazz.getKey().asString()).color(NamedTextColor.GRAY)));
             sender.sendMessage(Component.text(" - ").color(NamedTextColor.DARK_GRAY).append(Component.text(wobject.getClass() + "#hashCode(): ").color(NamedTextColor.GRAY)).append(hashCode));
             sender.sendMessage(Component.text(" - ").color(NamedTextColor.DARK_GRAY).append(Component.text(wobject.getClass() + "#toString(): ").color(NamedTextColor.GRAY)).append(toString));
         }

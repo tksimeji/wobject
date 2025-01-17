@@ -3,8 +3,10 @@ package com.tksimeji.wobject.reflect;
 import com.google.gson.JsonObject;
 import com.tksimeji.wobject.api.BlockComponent;
 import com.tksimeji.wobject.api.EntityComponent;
-import com.tksimeji.wobject.api.Handler;
 import com.tksimeji.wobject.api.Wobject;
+import com.tksimeji.wobject.event.Event;
+import com.tksimeji.wobject.event.Handler;
+import com.tksimeji.wobject.event.KillEvent;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.key.KeyPattern;
 import org.bukkit.Material;
@@ -42,10 +44,7 @@ public final class WobjectClass<T> implements Type {
     private final @NotNull Wobject annotation;
 
     private final @NotNull Set<IWobjectComponent<?, ?, ?>> components;
-
-    private final @NotNull Set<Method> interactHandlers;
-    private final @NotNull Set<Method> redstoneHandlers;
-    private final @NotNull Set<Method> killHandlers;
+    private final @NotNull Set<Method> handlers;
 
     private final @NotNull Map<UUID, Object> wobjects = new HashMap<>();
 
@@ -64,6 +63,11 @@ public final class WobjectClass<T> implements Type {
 
         this.clazz = clazz;
         annotation = clazz.getAnnotation(Wobject.class);
+
+        if (! Key.parseable(annotation.value())) {
+            throw new IllegalArgumentException();
+        }
+
         components = getFields().stream()
                         .filter(field -> (field.isAnnotationPresent(BlockComponent.class) && Block.class.isAssignableFrom(field.getType())) ||
                                 (field.isAnnotationPresent(EntityComponent.class) && Entity.class.isAssignableFrom(field.getType())))
@@ -77,21 +81,11 @@ public final class WobjectClass<T> implements Type {
                             throw new UnsupportedOperationException();
                         }).collect(Collectors.toSet());
 
-        interactHandlers = getMethods().stream()
-                        .filter(method -> method.isAnnotationPresent(Handler.Interact.class))
-                        .collect(Collectors.toSet());
-
-        redstoneHandlers = getMethods().stream()
-                        .filter(method -> method.isAnnotationPresent(Handler.Redstone.class))
-                        .collect(Collectors.toSet());
-
-        killHandlers = getMethods().stream()
-                        .filter(method -> method.isAnnotationPresent(Handler.Kill.class))
-                        .collect(Collectors.toSet());
-
-        if (! Key.parseable(annotation.value())) {
-            throw new IllegalArgumentException();
-        }
+        handlers = getMethods().stream()
+                .filter(method -> method.isAnnotationPresent(Handler.class) &&
+                        method.getParameters().length == 1 &&
+                        Event.class.isAssignableFrom(method.getParameterTypes()[0]))
+                .collect(Collectors.toSet());
 
         instances.add(this);
     }
@@ -172,18 +166,6 @@ public final class WobjectClass<T> implements Type {
                 .collect(Collectors.toSet());
     }
 
-    public @NotNull Set<Method> getInteractHandlers() {
-        return interactHandlers;
-    }
-
-    public @NotNull Set<Method> getRedstoneHandlers() {
-        return redstoneHandlers;
-    }
-
-    public @NotNull Set<Method> getKillHandlers() {
-        return killHandlers;
-    }
-
     public @NotNull Set<Field> getFields() {
         return getJavaClassTree().stream().flatMap(clazz -> Arrays.stream(clazz.getDeclaredFields())).collect(Collectors.toSet());
     }
@@ -238,35 +220,27 @@ public final class WobjectClass<T> implements Type {
         return wobject;
     }
 
-    public void call(@NotNull Object wobject, @NotNull Set<Method> handlers, @NotNull Object... args) {
-        if (of(wobject.getClass()) != this || ! wobjects.containsValue(wobject)) {
-            throw new IllegalArgumentException();
-        }
+    public <E extends Event> @NotNull E call(@NotNull Object wobject, @NotNull E event) {
+        return call(wobject, event, null);
+    }
 
-        for (Method handler : handlers) {
-            handler.setAccessible(true);
+    public <E extends Event> @NotNull E call(@NotNull Object wobject, @NotNull E event, @Nullable IWobjectComponent<?, ?, ?> component) {
+        handlers.stream()
+                .filter(handler -> {
+                    List<String> components = List.of(handler.getAnnotation(Handler.class).component());
+                    return event.getClass().isAssignableFrom(handler.getParameterTypes()[0]) &&
+                            (component == null || components.isEmpty() || components.contains(component.getName()));
+                })
+                .sorted(Comparator.comparingInt(handler -> handler.getAnnotation(Handler.class).priority()))
+                .forEach(handler -> {
+                    try {
+                        handler.invoke(wobject, event);
+                    } catch (InvocationTargetException | IllegalAccessException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
 
-            Parameter[] parameters = handler.getParameters();
-            Object[] assembledArgs = new Object[parameters.length];
-
-            for (int i = 0; i < assembledArgs.length; i ++) {
-                Parameter parameter = parameters[i];
-                Class<?> type = parameter.getType();
-
-                int finalI = i;
-
-                Arrays.stream(args)
-                        .filter(arg -> type.isAssignableFrom(arg.getClass()))
-                        .findFirst()
-                        .ifPresentOrElse(arg -> assembledArgs[finalI] = arg, () -> assembledArgs[finalI] = null);
-            }
-
-            try {
-                handler.invoke(wobject, assembledArgs);
-            } catch (InvocationTargetException | IllegalAccessException e) {
-                throw new RuntimeException(e);
-            }
-        }
+        return event;
     }
 
     public void kill(@NotNull Object wobject) {
@@ -274,7 +248,7 @@ public final class WobjectClass<T> implements Type {
             throw new IllegalArgumentException();
         }
 
-        call(wobject, getKillHandlers());
+        call(wobject, new KillEvent());
 
         wobjects.remove(getUniqueId(wobject));
 

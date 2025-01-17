@@ -2,7 +2,7 @@ package com.tksimeji.wobject.listener;
 
 import com.tksimeji.wobject.Wobject;
 import com.tksimeji.wobject.WobjectBuilder;
-import com.tksimeji.wobject.api.Handler;
+import com.tksimeji.wobject.event.InteractEvent;
 import com.tksimeji.wobject.reflect.WobjectBlockComponent;
 import com.tksimeji.wobject.reflect.WobjectClass;
 import com.tksimeji.wobject.reflect.WobjectEntityComponent;
@@ -16,16 +16,14 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
+import org.bukkit.event.player.PlayerInteractAtEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 public final class PlayerListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -44,25 +42,46 @@ public final class PlayerListener implements Listener {
             return;
         }
 
-        clazz.call(wobject, clazz.getInteractHandlers().stream().filter(handler -> {
-            Handler.Interact annotation = handler.getAnnotation(Handler.Interact.class);
-            List<String> components = Arrays.asList(annotation.component());
-            return components.isEmpty() || components.contains(component.getName());
-        }).collect(Collectors.toSet()), event, event.getPlayer(), block);
+        InteractEvent.Action action = switch (event.getAction()) {
+            case LEFT_CLICK_AIR, LEFT_CLICK_BLOCK -> InteractEvent.Action.LEFT_CLICK;
+            case RIGHT_CLICK_AIR, RIGHT_CLICK_BLOCK -> InteractEvent.Action.RIGHT_CLICK;
+            default -> throw new IllegalStateException();
+        };
+
+        event.setCancelled(clazz.call(wobject, new InteractEvent(block, event.getPlayer(), action, event.getItem(), event.getInteractionPoint())).isCancelled());
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPlayerInteractAtEntity(@NotNull PlayerInteractAtEntityEvent event) {
+        Entity entity = event.getRightClicked();
+        Object wobject = Wobject.get(entity);
+
+        if (wobject == null) {
+            return;
+        }
+
+        WobjectClass<?> clazz = WobjectClass.of(wobject.getClass());
+        WobjectEntityComponent component = clazz.getEntityComponent(wobject, entity);
+
+        if (component == null) {
+            return;
+        }
+
+        event.setCancelled(clazz.call(wobject, new InteractEvent(entity, event.getPlayer(), InteractEvent.Action.RIGHT_CLICK, event.getPlayer().getInventory().getItemInMainHand(), event.getClickedPosition().toLocation(entity.getWorld()))).isCancelled());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onPlayerInteract2(@NotNull PlayerInteractEvent event) {
         Location point = event.getInteractionPoint();
-        ItemStack itemStack = event.getItem();
+        ItemStack item = event.getItem();
 
-        if (event.getAction() != Action.RIGHT_CLICK_BLOCK || point == null || itemStack == null) {
+        if (event.getAction() != Action.RIGHT_CLICK_BLOCK || point == null || item == null) {
             return;
         }
 
-        PersistentDataContainer container = itemStack.getItemMeta().getPersistentDataContainer();
+        PersistentDataContainer container = item.getItemMeta().getPersistentDataContainer();
 
-        if (! container.has(new NamespacedKey(Wobject.plugin(), "class")) || itemStack.getType().isBlock()) {
+        if (! container.has(new NamespacedKey(Wobject.plugin(), "class")) || item.getType().isBlock()) {
             return;
         }
 
@@ -78,10 +97,15 @@ public final class PlayerListener implements Listener {
             return;
         }
 
+        EntityType entityType = EntityType.valueOf(container.get(new NamespacedKey(Wobject.plugin(), "entity"), PersistentDataType.STRING));
+
+        if (! entityType.isAlive()) {
+            return;
+        }
+
         event.setCancelled(true);
         event.getPlayer().getInventory().setItemInMainHand(null);
 
-        EntityType entityType = EntityType.valueOf(container.get(new NamespacedKey(Wobject.plugin(), "entity"), PersistentDataType.STRING));
         Entity entity = point.getWorld().spawnEntity(point, entityType);
         entity.setGravity(false);
         entity.setPersistent(true);

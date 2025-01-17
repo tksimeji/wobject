@@ -2,10 +2,7 @@ package com.tksimeji.wobject;
 
 import com.google.gson.JsonArray;
 import com.tksimeji.wobject.command.WobjectCommand;
-import com.tksimeji.wobject.listener.BlockListener;
-import com.tksimeji.wobject.listener.InventoryListener;
-import com.tksimeji.wobject.listener.PlayerListener;
-import com.tksimeji.wobject.listener.ServerListener;
+import com.tksimeji.wobject.listener.*;
 import com.tksimeji.wobject.reflect.WobjectClass;
 import com.tksimeji.wobject.runnable.ItemStackRunnable;
 import com.tksimeji.wobject.util.ResourceUtility;
@@ -104,6 +101,7 @@ public final class Wobject extends JavaPlugin {
         getCommand("wobject").setExecutor(new WobjectCommand());
 
         getServer().getPluginManager().registerEvents(new BlockListener(), this);
+        getServer().getPluginManager().registerEvents(new EntityListener(), this);
         getServer().getPluginManager().registerEvents(new InventoryListener(), this);
         getServer().getPluginManager().registerEvents(new PlayerListener(), this);
         getServer().getPluginManager().registerEvents(new ServerListener(), this);

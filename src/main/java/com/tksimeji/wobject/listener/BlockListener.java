@@ -2,7 +2,7 @@ package com.tksimeji.wobject.listener;
 
 import com.tksimeji.wobject.Wobject;
 import com.tksimeji.wobject.WobjectBuilder;
-import com.tksimeji.wobject.api.Handler;
+import com.tksimeji.wobject.event.RedstoneEvent;
 import com.tksimeji.wobject.reflect.WobjectBlockComponent;
 import com.tksimeji.wobject.reflect.WobjectClass;
 import com.tksimeji.wobject.ui.TypeSelectorUI;
@@ -22,11 +22,8 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 public final class BlockListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -98,10 +95,6 @@ public final class BlockListener implements Listener {
             return;
         }
 
-        clazz.call(wobject, clazz.getRedstoneHandlers().stream().filter(handler -> {
-            Handler.Redstone annotation = handler.getAnnotation(Handler.Redstone.class);
-            List<String> components = Arrays.asList(annotation.component());
-            return components.isEmpty() || components.contains(component.getName());
-        }).collect(Collectors.toSet()), event, event.getBlock());
+        clazz.call(wobject, new RedstoneEvent(event.getBlock(), event.getOldCurrent(), event.getNewCurrent()));
     }
 }
