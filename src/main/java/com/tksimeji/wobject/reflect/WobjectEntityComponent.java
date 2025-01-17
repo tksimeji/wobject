@@ -47,7 +47,8 @@ public final class WobjectEntityComponent extends WobjectComponent<Entity, Entit
 
     @Override
     public boolean isValidValue(@NotNull Object wobject) {
-        return hasValue(wobject) && getTypes().contains(Objects.requireNonNull(getValue(wobject)).getType());
+        Entity value = getValue(wobject);
+        return value != null && ! value.isDead() && getTypes().contains(value.getType());
     }
 
     @Override
