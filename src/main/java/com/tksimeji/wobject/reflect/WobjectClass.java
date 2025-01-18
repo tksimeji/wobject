@@ -79,13 +79,13 @@ public final class WobjectClass<T> implements Type {
                             }
 
                             throw new UnsupportedOperationException();
-                        }).collect(Collectors.toSet());
+                        }).collect(Collectors.toCollection(LinkedHashSet::new));
 
         handlers = getMethods().stream()
                 .filter(method -> method.isAnnotationPresent(Handler.class) &&
                         method.getParameters().length == 1 &&
                         Event.class.isAssignableFrom(method.getParameterTypes()[0]))
-                .collect(Collectors.toSet());
+                .collect(Collectors.toCollection(LinkedHashSet::new));
 
         instances.add(this);
     }
@@ -119,7 +119,7 @@ public final class WobjectClass<T> implements Type {
     }
 
     public @NotNull Set<IWobjectComponent<?, ?, ?>> getComponents() {
-        return new HashSet<>(components);
+        return new LinkedHashSet<>(components);
     }
 
     public @Nullable WobjectBlockComponent getBlockComponent(@Nullable String name) {
@@ -141,7 +141,7 @@ public final class WobjectClass<T> implements Type {
         return components.stream()
                 .filter(component -> component instanceof WobjectBlockComponent)
                 .map(component -> (WobjectBlockComponent) component)
-                .collect(Collectors.toSet());
+                .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     public @Nullable WobjectEntityComponent getEntityComponent(@Nullable String name) {
@@ -163,15 +163,15 @@ public final class WobjectClass<T> implements Type {
         return components.stream()
                 .filter(component -> component instanceof WobjectEntityComponent)
                 .map(component -> (WobjectEntityComponent) component)
-                .collect(Collectors.toSet());
+                .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     public @NotNull Set<Field> getFields() {
-        return getJavaClassTree().stream().flatMap(clazz -> Arrays.stream(clazz.getDeclaredFields())).collect(Collectors.toSet());
+        return getJavaClassTree().stream().flatMap(clazz -> Arrays.stream(clazz.getDeclaredFields())).collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     public @NotNull Set<Method> getMethods() {
-        return getJavaClassTree().stream().flatMap(clazz -> Arrays.stream(clazz.getDeclaredMethods())).collect(Collectors.toSet());
+        return getJavaClassTree().stream().flatMap(clazz -> Arrays.stream(clazz.getDeclaredMethods())).collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     public @NotNull Class<T> getJavaClass() {
@@ -179,7 +179,7 @@ public final class WobjectClass<T> implements Type {
     }
 
     public @NotNull Set<Class<?>> getJavaClassTree() {
-        Set<Class<?>> tree = new HashSet<>();
+        Set<Class<?>> tree = new LinkedHashSet<>();
         tree.add(clazz);
 
         Class<?> superclass = clazz.getSuperclass();

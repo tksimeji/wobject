@@ -12,8 +12,12 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 public @interface EntityComponent {
     @NotNull EntityType value();
+
     boolean ai() default false;
+
     boolean collidable() default false;
+
     boolean gravity() default false;
+
     boolean silent() default true;
 }
