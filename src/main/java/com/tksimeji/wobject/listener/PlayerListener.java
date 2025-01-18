@@ -83,12 +83,12 @@ public final class PlayerListener implements Listener {
         event.getPlayer().getInventory().setItemInMainHand(null);
 
         Entity entity = point.getWorld().spawnEntity(point, entityType);
-        entity.setGravity(false);
+        entity.setGravity(component.getAnnotation().gravity());
         entity.setPersistent(true);
 
         if (entity instanceof LivingEntity livingEntity) {
-            livingEntity.setAI(false);
-            livingEntity.setCollidable(false);
+            livingEntity.setAI(component.getAnnotation().ai());
+            livingEntity.setCollidable(component.getAnnotation().collidable());
         }
 
         builder.put(component, entity);
