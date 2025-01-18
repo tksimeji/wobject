@@ -2,13 +2,16 @@ package com.tksimeji.wobject.command;
 
 import com.tksimeji.wobject.WobjectBuilder;
 import com.tksimeji.wobject.reflect.WobjectClass;
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.Arrays;
 import java.util.List;
 
 public final class NewSubcommand implements Subcommand {
@@ -43,10 +46,14 @@ public final class NewSubcommand implements Subcommand {
     }
 
     @Override
-    public @NotNull List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
+    public @Nullable List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
+        if (args.length != 1) {
+            return null;
+        }
+
         return WobjectClass.all().stream()
                 .map(clazz -> clazz.getKey().asString())
-                .filter(string -> string.toLowerCase().startsWith(args[0].toLowerCase()))
+                .filter(string -> string.toLowerCase().startsWith(args[0].toLowerCase()) || Key.key(string).value().toLowerCase().startsWith(args[0].toLowerCase()))
                 .toList();
     }
 }

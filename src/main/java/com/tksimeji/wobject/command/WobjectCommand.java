@@ -64,6 +64,8 @@ public final class WobjectCommand implements CommandExecutor, TabCompleter {
             return List.of();
         }
 
-        return Optional.ofNullable(subcommand.onTabComplete(sender, command, label, args)).orElse(List.of());
+        String[] args2 = new String[args.length - 1];
+        System.arraycopy(args, 1, args2, 0, args2.length);
+        return Optional.ofNullable(subcommand.onTabComplete(sender, command, label, args2)).orElse(List.of());
     }
 }
