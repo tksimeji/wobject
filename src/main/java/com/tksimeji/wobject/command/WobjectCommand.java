@@ -52,7 +52,8 @@ public final class WobjectCommand implements CommandExecutor, TabCompleter {
     public @NotNull List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (args.length == 1) {
             return new ArrayList<>(subcommands.entrySet().stream()
-                    .filter(entry -> sender.hasPermission("wobject." + entry.getValue().getName()))
+                    .filter(entry -> entry.getKey().toLowerCase().startsWith(args[0].toLowerCase()) &&
+                            sender.hasPermission("wobject." + entry.getValue().getName()))
                     .map(Map.Entry::getKey)
                     .toList());
         }

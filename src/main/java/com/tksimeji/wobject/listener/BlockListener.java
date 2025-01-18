@@ -1,13 +1,11 @@
 package com.tksimeji.wobject.listener;
 
+import com.destroystokyo.paper.event.block.BlockDestroyEvent;
 import com.tksimeji.wobject.Wobject;
 import com.tksimeji.wobject.WobjectBuilder;
-import com.tksimeji.wobject.api.Handler;
+import com.tksimeji.wobject.reflect.WobjectBlockComponent;
 import com.tksimeji.wobject.reflect.WobjectClass;
-import com.tksimeji.wobject.reflect.WobjectComponent;
 import com.tksimeji.wobject.ui.TypeSelectorUI;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.NamespacedKey;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
@@ -22,13 +20,40 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 public final class BlockListener implements Listener {
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onBlockBreak(@NotNull BlockBreakEvent event) {
+        Block block = event.getBlock();
+        Object wobject = Wobject.get(block);
+
+        if (wobject == null) {
+            Optional.ofNullable(WobjectBuilder.get(block)).ifPresent(WobjectBuilder::kill);
+            return;
+        }
+
+        Player player = event.getPlayer();
+
+        WobjectClass<?> clazz = WobjectClass.of(wobject.getClass());
+
+        com.tksimeji.wobject.event.BlockBreakEvent e = new com.tksimeji.wobject.event.BlockBreakEvent(block, player);
+        event.setCancelled(clazz.call(wobject, e).isCancelled());
+        event.setDropItems(e.isDrop());
+
+        if (e.isCancelled()) {
+            return;
+        }
+
+        clazz.kill(wobject);
+    }
+
+    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    public void onBlockDestroy(@NotNull BlockDestroyEvent event) {
+        onBlockBreak(new BlockBreakEvent(event.getBlock(), null));
+    }
+
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onBlockPlace(@NotNull BlockPlaceEvent event) {
         Player player = event.getPlayer();
@@ -39,13 +64,13 @@ public final class BlockListener implements Listener {
             return;
         }
 
-        WobjectBuilder<?> builder = WobjectBuilder.get(UUID.fromString(container.get(new NamespacedKey(Wobject.plugin(), "uuid"), PersistentDataType.STRING)));
+        WobjectBuilder<?> builder = WobjectBuilder.get(UUID.fromString(container.get(new NamespacedKey(Wobject.plugin(), "builder"), PersistentDataType.STRING)));
 
         if (builder == null) {
             return;
         }
 
-        WobjectComponent component = builder.getWobjectClass().getComponent(container.get(new NamespacedKey(Wobject.plugin(), "component"), PersistentDataType.STRING));
+        WobjectBlockComponent component = builder.getWobjectClass().getBlockComponent(container.get(new NamespacedKey(Wobject.plugin(), "component"), PersistentDataType.STRING));
 
         if (component == null) {
             return;
@@ -61,28 +86,6 @@ public final class BlockListener implements Listener {
         player.getInventory().setItemInMainHand(null);
     }
 
-    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-    public void onBlockBreak(@NotNull BlockBreakEvent event) {
-        Block block = event.getBlock();
-        Object wobject = Wobject.get(block);
-
-        if (wobject == null) {
-            Optional.ofNullable(WobjectBuilder.get(block)).ifPresent(WobjectBuilder::kill);
-            return;
-        }
-
-        Player player = event.getPlayer();
-
-        if (! player.hasPermission("wobject.break")) {
-            player.sendMessage(Component.text("You do not have permission to do this.").color(NamedTextColor.RED));
-            event.setCancelled(true);
-            return;
-        }
-
-        WobjectClass<?> clazz = WobjectClass.of(wobject.getClass());
-        clazz.kill(wobject);
-    }
-
     @EventHandler(priority = EventPriority.MONITOR)
     public void onBlockRedstone(@NotNull BlockRedstoneEvent event) {
         Object wobject = Wobject.get(event.getBlock());
@@ -92,16 +95,14 @@ public final class BlockListener implements Listener {
         }
 
         WobjectClass<?> clazz = WobjectClass.of(wobject.getClass());
-        WobjectComponent component = clazz.getComponent(wobject, event.getBlock());
+        WobjectBlockComponent component = clazz.getBlockComponent(wobject, event.getBlock());
 
         if (component == null) {
             return;
         }
 
-        clazz.call(wobject, clazz.getRedstoneHandlers().stream().filter(handler -> {
-            Handler.Redstone annotation = handler.getAnnotation(Handler.Redstone.class);
-            List<String> components = Arrays.asList(annotation.component());
-            return components.isEmpty() || components.contains(component.getName());
-        }).collect(Collectors.toSet()), event, event.getBlock());
+        com.tksimeji.wobject.event.BlockRedstoneEvent e = new com.tksimeji.wobject.event.BlockRedstoneEvent(event.getBlock(), event.getOldCurrent(), event.getNewCurrent());
+        clazz.call(wobject, e);
+        event.setNewCurrent(e.getTo());
     }
 }

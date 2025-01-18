@@ -1,14 +1,17 @@
 package com.tksimeji.wobject.reflect;
 
 import com.google.gson.JsonObject;
-import com.tksimeji.wobject.api.Component;
-import com.tksimeji.wobject.api.Handler;
+import com.tksimeji.wobject.api.BlockComponent;
+import com.tksimeji.wobject.api.EntityComponent;
 import com.tksimeji.wobject.api.Wobject;
+import com.tksimeji.wobject.event.Event;
+import com.tksimeji.wobject.event.Handler;
+import com.tksimeji.wobject.event.KillEvent;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.key.KeyPattern;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Entity;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -40,11 +43,8 @@ public final class WobjectClass<T> implements Type {
     private final @NotNull Class<T> clazz;
     private final @NotNull Wobject annotation;
 
-    private final @NotNull Set<WobjectComponent> components;
-
-    private final @NotNull Set<Method> interactHandlers;
-    private final @NotNull Set<Method> redstoneHandlers;
-    private final @NotNull Set<Method> killHandlers;
+    private final @NotNull Set<IWobjectComponent<?, ?, ?>> components;
+    private final @NotNull Set<Method> handlers;
 
     private final @NotNull Map<UUID, Object> wobjects = new HashMap<>();
 
@@ -63,26 +63,29 @@ public final class WobjectClass<T> implements Type {
 
         this.clazz = clazz;
         annotation = clazz.getAnnotation(Wobject.class);
-        components = getFields().stream()
-                        .filter(field -> field.isAnnotationPresent(Component.class) && Block.class.isAssignableFrom(field.getType()))
-                        .map(WobjectComponent::new)
-                        .collect(Collectors.toSet());
-
-        interactHandlers = getMethods().stream()
-                        .filter(method -> method.isAnnotationPresent(Handler.Interact.class))
-                        .collect(Collectors.toSet());
-
-        redstoneHandlers = getMethods().stream()
-                        .filter(method -> method.isAnnotationPresent(Handler.Redstone.class))
-                        .collect(Collectors.toSet());
-
-        killHandlers = getMethods().stream()
-                        .filter(method -> method.isAnnotationPresent(Handler.Kill.class))
-                        .collect(Collectors.toSet());
 
         if (! Key.parseable(annotation.value())) {
             throw new IllegalArgumentException();
         }
+
+        components = getFields().stream()
+                        .filter(field -> (field.isAnnotationPresent(BlockComponent.class) && Block.class.isAssignableFrom(field.getType())) ||
+                                (field.isAnnotationPresent(EntityComponent.class) && Entity.class.isAssignableFrom(field.getType())))
+                        .map(field -> {
+                            if (field.isAnnotationPresent(BlockComponent.class)) {
+                                return new WobjectBlockComponent(field);
+                            } else if (field.isAnnotationPresent(EntityComponent.class)) {
+                                return new WobjectEntityComponent(field);
+                            }
+
+                            throw new UnsupportedOperationException();
+                        }).collect(Collectors.toCollection(LinkedHashSet::new));
+
+        handlers = getMethods().stream()
+                .filter(method -> method.isAnnotationPresent(Handler.class) &&
+                        method.getParameters().length == 1 &&
+                        Event.class.isAssignableFrom(method.getParameterTypes()[0]))
+                .collect(Collectors.toCollection(LinkedHashSet::new));
 
         instances.add(this);
     }
@@ -111,51 +114,64 @@ public final class WobjectClass<T> implements Type {
         return new HashSet<>(wobjects.values());
     }
 
-    public @Nullable WobjectComponent getComponent(@Nullable String name) {
+    public @Nullable IWobjectComponent<?, ?, ?> getComponent(@Nullable String name) {
         return components.stream().filter(component -> component.getName().equals(name)).findFirst().orElse(null);
     }
 
-    public @Nullable WobjectComponent getComponent(@Nullable Object wobject, @Nullable Location location) {
-        if (wobject == null || location == null) {
+    public @NotNull Set<IWobjectComponent<?, ?, ?>> getComponents() {
+        return new LinkedHashSet<>(components);
+    }
+
+    public @Nullable WobjectBlockComponent getBlockComponent(@Nullable String name) {
+        return getComponent(name) instanceof WobjectBlockComponent blockComponent ? blockComponent : null;
+    }
+
+    public @Nullable WobjectBlockComponent getBlockComponent(@Nullable Object wobject, @Nullable Block block) {
+        if (wobject == null || block == null) {
             return null;
         }
 
-        return components.stream().filter(component -> {
-            Block block = component.getValue(wobject);
-            return block != null && block.getLocation().equals(location);
+        return getBlockComponents().stream().filter(component -> {
+            Block value = component.getValue(wobject);
+            return value != null && value.getLocation().equals(block.getLocation());
         }).findFirst().orElse(null);
     }
 
-    public @Nullable WobjectComponent getComponent(@Nullable Object wobject, @Nullable Block block) {
-        if (block == null) {
+    public @NotNull Set<WobjectBlockComponent> getBlockComponents() {
+        return components.stream()
+                .filter(component -> component instanceof WobjectBlockComponent)
+                .map(component -> (WobjectBlockComponent) component)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+    }
+
+    public @Nullable WobjectEntityComponent getEntityComponent(@Nullable String name) {
+        return getComponent(name) instanceof WobjectEntityComponent entityComponent ? entityComponent : null;
+    }
+
+    public @Nullable WobjectEntityComponent getEntityComponent(@Nullable Object wobject, @Nullable Entity entity) {
+        if (wobject == null || entity == null) {
             return null;
         }
 
-        return getComponent(wobject, block.getLocation());
+        return getEntityComponents().stream().filter(component -> {
+            Entity value = component.getValue(wobject);
+            return value != null && value.getUniqueId().equals(entity.getUniqueId());
+        }).findFirst().orElse(null);
     }
 
-    public @NotNull Set<WobjectComponent> getComponents() {
-        return new HashSet<>(components);
-    }
-
-    public @NotNull Set<Method> getInteractHandlers() {
-        return interactHandlers;
-    }
-
-    public @NotNull Set<Method> getRedstoneHandlers() {
-        return redstoneHandlers;
-    }
-
-    public @NotNull Set<Method> getKillHandlers() {
-        return killHandlers;
+    public @NotNull Set<WobjectEntityComponent> getEntityComponents() {
+        return components.stream()
+                .filter(component -> component instanceof WobjectEntityComponent)
+                .map(component -> (WobjectEntityComponent) component)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     public @NotNull Set<Field> getFields() {
-        return getJavaClassTree().stream().flatMap(clazz -> Arrays.stream(clazz.getDeclaredFields())).collect(Collectors.toSet());
+        return getJavaClassTree().stream().flatMap(clazz -> Arrays.stream(clazz.getDeclaredFields())).collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     public @NotNull Set<Method> getMethods() {
-        return getJavaClassTree().stream().flatMap(clazz -> Arrays.stream(clazz.getDeclaredMethods())).collect(Collectors.toSet());
+        return getJavaClassTree().stream().flatMap(clazz -> Arrays.stream(clazz.getDeclaredMethods())).collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     public @NotNull Class<T> getJavaClass() {
@@ -163,7 +179,7 @@ public final class WobjectClass<T> implements Type {
     }
 
     public @NotNull Set<Class<?>> getJavaClassTree() {
-        Set<Class<?>> tree = new HashSet<>();
+        Set<Class<?>> tree = new LinkedHashSet<>();
         tree.add(clazz);
 
         Class<?> superclass = clazz.getSuperclass();
@@ -191,7 +207,6 @@ public final class WobjectClass<T> implements Type {
 
         try {
             wobject = clazz.getConstructor().newInstance();
-            wobjects.put(uuid, wobject);
         } catch (InvocationTargetException | InstantiationException | IllegalAccessException | NoSuchMethodException e) {
             throw new RuntimeException(e);
         }
@@ -201,38 +216,31 @@ public final class WobjectClass<T> implements Type {
             com.tksimeji.wobject.Wobject.saveJson();
         }
 
+        wobjects.put(uuid, wobject);
         return wobject;
     }
 
-    public void call(@NotNull Object wobject, @NotNull Set<Method> handlers, @NotNull Object... args) {
-        if (of(wobject.getClass()) != this || ! wobjects.containsValue(wobject)) {
-            throw new IllegalArgumentException();
-        }
+    public <E extends Event> @NotNull E call(@NotNull Object wobject, @NotNull E event) {
+        return call(wobject, event, null);
+    }
 
-        for (Method handler : handlers) {
-            handler.setAccessible(true);
+    public <E extends Event> @NotNull E call(@NotNull Object wobject, @NotNull E event, @Nullable IWobjectComponent<?, ?, ?> component) {
+        handlers.stream()
+                .filter(handler -> {
+                    List<String> components = List.of(handler.getAnnotation(Handler.class).component());
+                    return event.getClass().isAssignableFrom(handler.getParameterTypes()[0]) &&
+                            (component == null || components.isEmpty() || components.contains(component.getName()));
+                })
+                .sorted(Comparator.comparingInt(handler -> handler.getAnnotation(Handler.class).priority()))
+                .forEach(handler -> {
+                    try {
+                        handler.invoke(wobject, event);
+                    } catch (InvocationTargetException | IllegalAccessException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
 
-            Parameter[] parameters = handler.getParameters();
-            Object[] assembledArgs = new Object[parameters.length];
-
-            for (int i = 0; i < assembledArgs.length; i ++) {
-                Parameter parameter = parameters[i];
-                Class<?> type = parameter.getType();
-
-                int finalI = i;
-
-                Arrays.stream(args)
-                        .filter(arg -> type.isAssignableFrom(arg.getClass()))
-                        .findFirst()
-                        .ifPresentOrElse(arg -> assembledArgs[finalI] = arg, () -> assembledArgs[finalI] = null);
-            }
-
-            try {
-                handler.invoke(wobject, assembledArgs);
-            } catch (InvocationTargetException | IllegalAccessException e) {
-                throw new RuntimeException(e);
-            }
-        }
+        return event;
     }
 
     public void kill(@NotNull Object wobject) {
@@ -240,15 +248,16 @@ public final class WobjectClass<T> implements Type {
             throw new IllegalArgumentException();
         }
 
-        call(wobject, getKillHandlers());
+        call(wobject, new KillEvent());
 
         wobjects.remove(getUniqueId(wobject));
-        getComponents().forEach(component -> {
-            Block block = component.getValue(wobject);
 
-            if (block != null) {
-                block.setType(Material.AIR);
-            }
+        getBlockComponents().forEach(component -> {
+            Optional.ofNullable(component.getValue(wobject)).ifPresent(value -> value.setType(Material.AIR));
+        });
+
+        getEntityComponents().forEach(component -> {
+            Optional.ofNullable(component.getValue(wobject)).ifPresent(Entity::remove);
         });
 
         com.tksimeji.wobject.Wobject.saveJson();

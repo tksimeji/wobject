@@ -1,6 +1,6 @@
 package com.tksimeji.wobject.api;
 
-import org.bukkit.Material;
+import org.bukkit.entity.EntityType;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.annotation.ElementType;
@@ -10,6 +10,14 @@ import java.lang.annotation.Target;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
-public @interface Component {
-    @NotNull Material[] value();
+public @interface EntityComponent {
+    @NotNull EntityType value();
+
+    boolean ai() default false;
+
+    boolean collidable() default false;
+
+    boolean gravity() default false;
+
+    boolean silent() default true;
 }

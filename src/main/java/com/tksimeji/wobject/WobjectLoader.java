@@ -1,12 +1,14 @@
 package com.tksimeji.wobject;
 
 import com.google.gson.JsonObject;
+import com.tksimeji.wobject.reflect.WobjectBlockComponent;
 import com.tksimeji.wobject.reflect.WobjectClass;
-import com.tksimeji.wobject.reflect.WobjectComponent;
+import com.tksimeji.wobject.reflect.WobjectEntityComponent;
 import net.kyori.adventure.key.Key;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Entity;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,10 +22,12 @@ public final class WobjectLoader {
     private boolean freeze = false;
     private boolean loading = false;
 
+    private boolean complete = false;
+
     WobjectLoader() {
     }
 
-    public void register(@NotNull Class<?> clazz) {
+    public void addClass(@NotNull Class<?> clazz) {
         if (freeze) {
             throw new UnsupportedOperationException("The registry is frozen and no further changes can be made.");
         }
@@ -64,6 +68,7 @@ public final class WobjectLoader {
         Wobject.saveJson();
 
         loading = false;
+        complete = true;
     }
 
     private void load(@NotNull JsonObject json) {
@@ -81,7 +86,7 @@ public final class WobjectLoader {
 
         Object wobject = null;
 
-        for (WobjectComponent component : clazz.getComponents()) {
+        for (WobjectBlockComponent component : clazz.getBlockComponents()) {
             JsonObject componentJson = json.getAsJsonObject("@" + component.getName());
 
             if (componentJson == null) {
@@ -103,6 +108,26 @@ public final class WobjectLoader {
 
             component.setValue(wobject, block);
         }
+
+        for (WobjectEntityComponent component : clazz.getEntityComponents()) {
+            JsonObject componentJson = json.getAsJsonObject("@" + component.getName());
+
+            if (componentJson == null) {
+                return;
+            }
+
+            Entity entity = Bukkit.getEntity(UUID.fromString(componentJson.get("uuid").getAsString()));
+
+            if (entity == null || ! component.getTypes().contains(entity.getType())) {
+                return;
+            }
+
+            if (wobject == null) {
+                wobject = clazz.newInstance(uuid);
+            }
+
+            component.setValue(wobject, entity);
+        }
     }
 
     public boolean isFroze() {
@@ -111,5 +136,9 @@ public final class WobjectLoader {
 
     public boolean isLoading() {
         return loading;
+    }
+
+    public boolean isLoaded() {
+        return complete;
     }
 }

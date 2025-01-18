@@ -2,7 +2,7 @@
 
 A Minecraft library that links objects in the world with Java objects
 
-![Version](https://img.shields.io/badge/version-0.1.0-blue?style=flat-square)
+![Version](https://img.shields.io/badge/version-0.2.0_dev-blue?style=flat-square)
 ![Licence](https://img.shields.io/badge/licence-MIT-red?style=flat-square)
 
 ## Get Started
@@ -69,7 +69,6 @@ permission: `wobject.class-list`
 ### /wobject new <class\>
 
 Create a new wobject.
-To destory a created wobject, you need the permission `wobject.break`.
 
 permission: `wobject.new`
 
@@ -94,39 +93,81 @@ public class MyWobject {
 
 ### 2. Declare the component.
 
-Components are the building blocks of an object. They can be one or more types.
+Components are the building blocks of objects.
 
-These are declared as fields of type `org.bukkit.block.Block` with the `com.tksimeji.wobject.api.Component` annotation 
-and are automatically injected when an instance is created.
+Block or entity is supported.
 
 ```java
 // Note: The field name will be the comopnent name.
 
-@Component({Material.TORCH, Material.SOUL_TORCH, Material.REDSTONE_TORCH})
-private Block torch;
+// Multiple types can be specified for the block component.
+@com.tksimeji.wobject.api.BlockComponent({Material.BLOCK_1, Material.BLOCK_2})
+private Block blockComponent;
+
+@com.tksimeji.wobject.api.EntityComponent(EntityType.ENTITY)
+private Entity entityComponent;
+```
+
+Entity components can also be customized with optional properties.
+
+```java
+@com.tksimeji.wobject.api.EntityComopnent(value = EntityType.ENTITY, ai = true, collidable = true, gravity = true, silent = false)
+private Entity customizedEntityComponent;
 ```
 
 ### 3. Declare the handler.
 
 The handler is special method that is called when a specific event occurs.
-It is declared with the `com.tksimeji.wobject.api.Handler.*` annotation.
+It is declared with the `com.tksimeji.wobject.event.Handler` annotation.
 
 ```java
-// The values that can be obtained from the arguments vary depending on the type of handler.
-
-@Handler.Interact(component = "component_name")
-public void handler1(PlayerInteractEvent event, Player player, Block block) {
-    // Called when the component is interacted with.
+@Handler
+public void onBlockBreak(@NotNull com.tksimeji.wobject.event.BlockBreakEvent event) {
+    // Called when a block component is destroyed
+    // Important: If you do not cancel the event, the wobject will be killed
 }
 
-@Handler.Redstone(component = "component_name")
-public void handler2(BlockRedstoneEvent event, Block block) {
-    // Called when the component's redstone signal strength changes.
+@Handler
+public void onBlockInteracted(@NotNull com.tksimeji.wobject.event.BlockInteractedEvent event) {
+    // Called when a block component is interacted with
 }
 
-@Handler.Kill()
-public void handler3() {
-    // Called when a component is destroyed and an object is killed.
+@Handler
+public void onBlockRedstone(@NotNull com.tksimeji.wobject.event.BlockRedstoneEvent event) {
+    // Called when the regstone signal supplied to a block component changes
+}
+
+@Handler
+public void onEntityDamage(@NotNull com.tksimeji.wobject.event.EntityDamageEvent event) {
+    // Called when an entity component takes damage
+}
+
+@Handler
+public void onEntityInteracted(@NotNull com.tksimeji.wobject.event.EntityInteractedEvent event) {
+    // Called when an entity component is interacted with
+}
+
+@Handler
+public void onEntityMove(@NotNull com.tksimeji.wobject.event.EntityMoveEvent event) {
+    // Called when an entity component moves
+}
+
+@Handler
+public void onKill(@NotNull KillEvent event) {
+    // Called when the wobject is killed for some reason
+}
+
+@Handler
+public void onTick(@NotNull TickEvent event) {
+    // Called every server tick
+}
+```
+
+Annotations can be used to restrict or prioritize components.
+
+```java
+@Handler(component = {"component1", "component2", "..."}, priority = 1)
+public void onEvent(@NotNull Event event) {
 }
 ```
 
