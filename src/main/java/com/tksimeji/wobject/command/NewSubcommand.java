@@ -44,6 +44,9 @@ public final class NewSubcommand implements Subcommand {
 
     @Override
     public @NotNull List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        return WobjectClass.all().stream().map(clazz -> clazz.getKey().asString()).toList();
+        return WobjectClass.all().stream()
+                .map(clazz -> clazz.getKey().asString())
+                .filter(string -> string.toLowerCase().startsWith(args[0].toLowerCase()))
+                .toList();
     }
 }

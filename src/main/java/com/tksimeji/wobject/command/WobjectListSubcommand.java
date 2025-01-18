@@ -1,15 +1,20 @@
 package com.tksimeji.wobject.command;
 
 import com.tksimeji.wobject.Wobject;
+import com.tksimeji.wobject.reflect.WobjectBlockComponent;
 import com.tksimeji.wobject.reflect.WobjectClass;
+import com.tksimeji.wobject.reflect.WobjectEntityComponent;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
+import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.Objects;
 
 public final class WobjectListSubcommand implements Subcommand {
     @Override
@@ -39,7 +44,7 @@ public final class WobjectListSubcommand implements Subcommand {
             Component hashCode;
 
             try {
-                hashCode = Component.text(wobject.hashCode());
+                hashCode = Component.text(wobject.hashCode()).color(NamedTextColor.DARK_GRAY);
             } catch (Exception ignored) {
                 hashCode = Component.text("Failed to get").color(NamedTextColor.RED);
             }
@@ -47,7 +52,7 @@ public final class WobjectListSubcommand implements Subcommand {
             Component toString = null;
 
             try {
-                toString = Component.text(wobject.toString());
+                toString = Component.text(wobject.toString()).color(NamedTextColor.DARK_GRAY);
             } catch (Exception ignored) {
                 toString = Component.text("Failed to get").color(NamedTextColor.RED);
             }
@@ -56,7 +61,28 @@ public final class WobjectListSubcommand implements Subcommand {
             sender.sendMessage(Component.text(" - ").color(NamedTextColor.DARK_GRAY).append(Component.text("Wobject class: " + clazz.getKey().asString()).color(NamedTextColor.GRAY)));
             sender.sendMessage(Component.text(" - ").color(NamedTextColor.DARK_GRAY).append(Component.text(wobject.getClass() + "#hashCode(): ").color(NamedTextColor.GRAY)).append(hashCode));
             sender.sendMessage(Component.text(" - ").color(NamedTextColor.DARK_GRAY).append(Component.text(wobject.getClass() + "#toString(): ").color(NamedTextColor.GRAY)).append(toString));
+
+            clazz.getComponents().stream()
+                    .filter(component -> component.hasValue(wobject))
+                    .forEach(component -> {
+                        Location location;
+
+                        if (component instanceof WobjectBlockComponent blockComponent) {
+                            location = Objects.requireNonNull(blockComponent.getValue(wobject)).getLocation();
+                        } else if (component instanceof WobjectEntityComponent entityComponent) {
+                            location = Objects.requireNonNull(entityComponent.getValue(wobject)).getLocation();
+                        } else {
+                            return;
+                        }
+
+                        sender.sendMessage(Component.text(" - ").color(NamedTextColor.DARK_GRAY)
+                                .append(Component.text(component.getName()).color(NamedTextColor.WHITE))
+                                .append(Component.text(String.format("%s, %s, %s, %s", location.getWorld().getKey().asString(), location.getX(), location.getY(), location.getZ())).color(NamedTextColor.GRAY)
+                                        .hoverEvent(Component.text("Click to teleport."))
+                                        .clickEvent(ClickEvent.runCommand(String.format("/minecraft:execute in %s run tp @p %s %s %s", location.getWorld().getKey().asString(), location.getX(), location. getY(), location.getZ())))));
+                    });
         }
+
         return true;
     }
 
