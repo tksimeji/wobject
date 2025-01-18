@@ -17,6 +17,11 @@ public final class EntityMoveEvent extends EntityEvent implements Cancellable {
         this.to = to;
     }
 
+    @Override
+    public @NotNull String getDescription() {
+        return "Called when an entity component moves.";
+    }
+
     public @NotNull Location getFrom() {
         return from;
     }

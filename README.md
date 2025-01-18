@@ -69,7 +69,6 @@ permission: `wobject.class-list`
 ### /wobject new <class\>
 
 Create a new wobject.
-To destory a created wobject, you need the permission `wobject.break`.
 
 permission: `wobject.new`
 
@@ -115,18 +114,39 @@ It is declared with the `com.tksimeji.wobject.event.Handler` annotation.
 
 ```java
 @Handler
-public void onInteract(@NotNull InteractEvent event) {
-    // Called when the component is interacted with
+public void onBlockBreak(@NotNull com.tksimeji.wobject.event.BlockBreakEvent event) {
+    // Called when a block component is destroyed
+    // Important: If you do not cancel the event, the wobject will be killed
+}
+
+@Handler
+public void onBlockInteracted(@NotNull com.tksimeji.wobject.event.BlockInteractedEvent event) {
+    // Called when a block component is interacted with
+}
+
+@Handler
+public void onBlockRedstone(@NotNull com.tksimeji.wobject.event.BlockRedstoneEvent event) {
+    // Called when the regstone signal supplied to a block component changes
+}
+
+@Handler
+public void onEntityDamage(@NotNull com.tksimeji.wobject.event.EntityDamageEvent event) {
+    // Called when an entity component takes damage
+}
+
+@Handler
+public void onEntityInteracted(@NotNull com.tksimeji.wobject.event.EntityInteractedEvent event) {
+    // Called when an entity component is interacted with
+}
+
+@Handler
+public void onEntityMove(@NotNull com.tksimeji.wobject.event.EntityMoveEvent event) {
+    // Called when an entity component moves
 }
 
 @Handler
 public void onKill(@NotNull KillEvent event) {
     // Called when the wobject is killed for some reason
-}
-
-@Handler
-public void onRedstone(@NotNull RedstoneEvent event) {
-    // Called when the regstone signal supplied to a block component changes
 }
 
 @Handler

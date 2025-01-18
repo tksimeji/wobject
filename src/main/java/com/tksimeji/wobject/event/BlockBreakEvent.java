@@ -17,6 +17,11 @@ public final class BlockBreakEvent extends BlockEvent implements Cancellable {
         this.player = player;
     }
 
+    @Override
+    public @NotNull String getDescription() {
+        return "Called when a block component is destroyed.";
+    }
+
     public @Nullable Player getPlayer() {
         return player;
     }

@@ -11,6 +11,5 @@ permissions:
     default: op
     children:
       wobject.class-list: true
-      wobject.break: true
       wobject.new: true
       wobject.wobject-list: true

@@ -16,6 +16,11 @@ public final class BlockInteractedEvent extends InteractEvent {
         this.block = block;
     }
 
+    @Override
+    public @NotNull String getDescription() {
+        return "Called when a block component is interacted with.";
+    }
+
     public @NotNull Block getBlock() {
         return block;
     }

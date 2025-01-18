@@ -16,6 +16,11 @@ public class EntityInteractedEvent extends InteractEvent {
         this.entity = entity;
     }
 
+    @Override
+    public @NotNull String getDescription() {
+        return "Called when an entity component is interacted with.";
+    }
+
     public @NotNull Entity getEntity() {
         return entity;
     }

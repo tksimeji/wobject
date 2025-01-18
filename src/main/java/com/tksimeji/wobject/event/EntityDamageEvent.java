@@ -18,6 +18,11 @@ public final class EntityDamageEvent extends EntityEvent implements Cancellable 
         this.damage = damage;
     }
 
+    @Override
+    public @Nullable String getDescription() {
+        return "Called when an entity component takes damage.";
+    }
+
     public @NotNull DamageSource getSource() {
         return source;
     }
