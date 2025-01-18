@@ -84,6 +84,7 @@ public final class PlayerListener implements Listener {
 
         Entity entity = point.getWorld().spawnEntity(point, entityType);
         entity.setGravity(component.getAnnotation().gravity());
+        entity.setSilent(component.getAnnotation().silent());
         entity.setPersistent(true);
 
         if (entity instanceof LivingEntity livingEntity) {

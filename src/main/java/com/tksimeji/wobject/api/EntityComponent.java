@@ -15,4 +15,5 @@ public @interface EntityComponent {
     boolean ai() default false;
     boolean collidable() default false;
     boolean gravity() default false;
+    boolean silent() default true;
 }

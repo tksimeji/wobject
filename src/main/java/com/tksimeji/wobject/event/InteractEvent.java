@@ -12,7 +12,7 @@ public abstract class InteractEvent extends PlayerEvent implements Cancellable {
     private final @Nullable ItemStack item;
     private final @Nullable Location location;
 
-    private boolean cancelled = true;
+    private boolean cancelled;
 
     public InteractEvent(@NotNull Player player, @NotNull Action action, @Nullable ItemStack item, @Nullable Location location) {
         super(player);

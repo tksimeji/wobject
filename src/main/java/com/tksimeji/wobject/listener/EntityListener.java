@@ -80,7 +80,12 @@ public final class EntityListener implements Listener {
             return;
         }
 
+        Entity entity = event.getEntity();
+        entity.setGravity(component.getAnnotation().gravity());
+        entity.setSilent(component.getAnnotation().silent());
+        entity.setPersistent(true);
+
         player.getInventory().setItemInMainHand(null);
-        builder.put(component, event.getEntity());
+        builder.put(component, entity);
     }
 }
