@@ -3,7 +3,7 @@ package com.tksimeji.wobject.event;
 import org.jetbrains.annotations.NotNull;
 
 public final class TickEvent extends Event {
-    private int number;
+    private final int number;
 
     public TickEvent(int number) {
         this.number = number;

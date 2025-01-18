@@ -1,61 +1,37 @@
 package com.tksimeji.wobject.event;
 
 import org.bukkit.Location;
-import org.bukkit.block.Block;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.event.block.Action;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class InteractEvent extends Event implements Cancellable {
-    private final @NotNull Object component;
-    private final @NotNull Player player;
+public abstract class InteractEvent extends PlayerEvent implements Cancellable {
     private final @NotNull Action action;
-    private final @Nullable ItemStack hand;
+    private final @Nullable ItemStack item;
     private final @Nullable Location location;
 
-    private boolean cancelled;
+    private boolean cancelled = true;
 
-    public InteractEvent(@NotNull Block component, @NotNull Player player, @NotNull Action action, @Nullable ItemStack hand, @Nullable Location location) {
-        this((Object) component, player, action, hand, location);
-    }
+    public InteractEvent(@NotNull Player player, @NotNull Action action, @Nullable ItemStack item, @Nullable Location location) {
+        super(player);
 
-    public InteractEvent(@NotNull Entity component, @NotNull Player player, @NotNull Action action, @Nullable ItemStack hand, @Nullable Location location) {
-        this((Object) component, player, action, hand, location);
-    }
-
-    private InteractEvent(@NotNull Object component, @NotNull Player player, @NotNull Action action, @Nullable ItemStack hand, @Nullable Location location) {
-        this.component = component;
-        this.player = player;
         this.action = action;
-        this.hand = hand;
+        this.item = item;
         this.location = location;
-    }
-
-    @Override
-    public @NotNull String getDescription() {
-        return "Called when a component is interacted with by a player.";
-    }
-
-    public @Nullable Block getBlock() {
-        return component instanceof Block block ? block : null;
-    }
-
-    public @Nullable Entity getEntity() {
-        return component instanceof Entity entity ? entity : null;
-    }
-
-    public @NotNull Player getPlayer() {
-        return player;
     }
 
     public @NotNull Action getAction() {
         return action;
     }
 
-    public @Nullable ItemStack getHand() {
-        return hand;
+    public @Nullable ItemStack getItem() {
+        return item;
+    }
+
+    public boolean hasItem() {
+        return item != null;
     }
 
     public @Nullable Location getLocation() {
@@ -72,24 +48,11 @@ public final class InteractEvent extends Event implements Cancellable {
         cancelled = cancel;
     }
 
-    public boolean isBlock() {
-        return getBlock() != null;
-    }
-
-    public boolean isEntity() {
-        return getEntity() != null;
-    }
-
     public boolean isLeftClick() {
-        return action == Action.LEFT_CLICK;
+        return action.isLeftClick();
     }
 
     public boolean isRightClick() {
-        return action == Action.RIGHT_CLICK;
-    }
-
-    public enum Action {
-        LEFT_CLICK,
-        RIGHT_CLICK
+        return action.isRightClick();
     }
 }

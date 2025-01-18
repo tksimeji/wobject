@@ -2,7 +2,8 @@ package com.tksimeji.wobject.listener;
 
 import com.tksimeji.wobject.Wobject;
 import com.tksimeji.wobject.WobjectBuilder;
-import com.tksimeji.wobject.event.InteractEvent;
+import com.tksimeji.wobject.event.BlockInteractedEvent;
+import com.tksimeji.wobject.event.EntityInteractedEvent;
 import com.tksimeji.wobject.reflect.WobjectBlockComponent;
 import com.tksimeji.wobject.reflect.WobjectClass;
 import com.tksimeji.wobject.reflect.WobjectEntityComponent;
@@ -42,32 +43,7 @@ public final class PlayerListener implements Listener {
             return;
         }
 
-        InteractEvent.Action action = switch (event.getAction()) {
-            case LEFT_CLICK_AIR, LEFT_CLICK_BLOCK -> InteractEvent.Action.LEFT_CLICK;
-            case RIGHT_CLICK_AIR, RIGHT_CLICK_BLOCK -> InteractEvent.Action.RIGHT_CLICK;
-            default -> throw new IllegalStateException();
-        };
-
-        event.setCancelled(clazz.call(wobject, new InteractEvent(block, event.getPlayer(), action, event.getItem(), event.getInteractionPoint())).isCancelled());
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onPlayerInteractAtEntity(@NotNull PlayerInteractAtEntityEvent event) {
-        Entity entity = event.getRightClicked();
-        Object wobject = Wobject.get(entity);
-
-        if (wobject == null) {
-            return;
-        }
-
-        WobjectClass<?> clazz = WobjectClass.of(wobject.getClass());
-        WobjectEntityComponent component = clazz.getEntityComponent(wobject, entity);
-
-        if (component == null) {
-            return;
-        }
-
-        event.setCancelled(clazz.call(wobject, new InteractEvent(entity, event.getPlayer(), InteractEvent.Action.RIGHT_CLICK, event.getPlayer().getInventory().getItemInMainHand(), event.getClickedPosition().toLocation(entity.getWorld()))).isCancelled());
+        event.setCancelled(clazz.call(wobject, new BlockInteractedEvent(block, event.getPlayer(), event.getAction(), event.getItem(), event.getInteractionPoint())).isCancelled());
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -116,5 +92,24 @@ public final class PlayerListener implements Listener {
         }
 
         builder.put(component, entity);
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onPlayerInteractAtEntity(@NotNull PlayerInteractAtEntityEvent event) {
+        Entity entity = event.getRightClicked();
+        Object wobject = Wobject.get(entity);
+
+        if (wobject == null) {
+            return;
+        }
+
+        WobjectClass<?> clazz = WobjectClass.of(wobject.getClass());
+        WobjectEntityComponent component = clazz.getEntityComponent(wobject, entity);
+
+        if (component == null) {
+            return;
+        }
+
+        event.setCancelled(clazz.call(wobject, new EntityInteractedEvent(entity, event.getPlayer(), Action.RIGHT_CLICK_AIR, event.getPlayer().getInventory().getItemInMainHand(), event.getClickedPosition().toLocation(entity.getWorld()))).isCancelled());
     }
 }

@@ -94,39 +94,52 @@ public class MyWobject {
 
 ### 2. Declare the component.
 
-Components are the building blocks of an object. They can be one or more types.
+Components are the building blocks of objects. They can be one or more types.
 
-These are declared as fields of type `org.bukkit.block.Block` with the `com.tksimeji.wobject.api.BlockComponent` annotation 
-and are automatically injected when an instance is created.
+Block or entity is supported.
 
 ```java
 // Note: The field name will be the comopnent name.
 
-@Component({Material.TORCH, Material.SOUL_TORCH, Material.REDSTONE_TORCH})
-private Block torch;
+@com.tksimeji.wobject.api.BlockComponent({Material.BLOCK_1, Material.BLOCK_2})
+private Block blockComponent;
+
+@com.tksimeji.wobject.api.EntityComponent({EntityType.ENTITY_1, EntityType.ENTITY_2})
+private Entity entityComponent;
 ```
 
 ### 3. Declare the handler.
 
 The handler is special method that is called when a specific event occurs.
-It is declared with the `com.tksimeji.wobject.api.Handler.*` annotation.
+It is declared with the `com.tksimeji.wobject.event.Handler` annotation.
 
 ```java
-// The values that can be obtained from the arguments vary depending on the type of handler.
-
-@Handler.Interact(component = "component_name")
-public void handler1(PlayerInteractEvent event, Player player, Block block) {
-    // Called when the component is interacted with.
+@Handler
+public void onInteract(@NotNull InteractEvent event) {
+    // Called when the component is interacted with
 }
 
-@Handler.Redstone(component = "component_name")
-public void handler2(BlockRedstoneEvent event, Block block) {
-    // Called when the component's redstone signal strength changes.
+@Handler
+public void onKill(@NotNull KillEvent event) {
+    // Called when the wobject is killed for some reason
 }
 
-@Handler.Kill()
-public void handler3() {
-    // Called when a component is destroyed and an object is killed.
+@Handler
+public void onRedstone(@NotNull RedstoneEvent event) {
+    // Called when the regstone signal supplied to a block component changes
+}
+
+@Handler
+public void onTick(@NotNull TickEvent event) {
+    // Called every server tick
+}
+```
+
+Annotations can be used to restrict or prioritize components.
+
+```java
+@Handler(component = {"component1", "component2", "..."}, priority = 1)
+public void onEvent(@NotNull Event event) {
 }
 ```
 
