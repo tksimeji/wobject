@@ -93,18 +93,26 @@ public class MyWobject {
 
 ### 2. Declare the component.
 
-Components are the building blocks of objects. They can be one or more types.
+Components are the building blocks of objects.
 
 Block or entity is supported.
 
 ```java
 // Note: The field name will be the comopnent name.
 
+// Multiple types can be specified for the block component.
 @com.tksimeji.wobject.api.BlockComponent({Material.BLOCK_1, Material.BLOCK_2})
 private Block blockComponent;
 
-@com.tksimeji.wobject.api.EntityComponent({EntityType.ENTITY_1, EntityType.ENTITY_2})
+@com.tksimeji.wobject.api.EntityComponent(EntityType.ENTITY)
 private Entity entityComponent;
+```
+
+Entity components can also be customized with optional properties.
+
+```java
+@com.tksimeji.wobject.api.EntityComopnent(value = EntityType.ENTITY, ai = true, collidable = true, gravity = true, silent = false)
+private Entity customizedEntityComponent;
 ```
 
 ### 3. Declare the handler.

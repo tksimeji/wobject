@@ -11,7 +11,7 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
 public @interface EntityComponent {
-    @NotNull EntityType[] value();
+    @NotNull EntityType value();
     boolean ai() default false;
     boolean collidable() default false;
     boolean gravity() default false;
