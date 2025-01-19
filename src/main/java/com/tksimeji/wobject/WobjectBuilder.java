@@ -101,6 +101,7 @@ public final class WobjectBuilder<T> extends HashMap<IWobjectComponent<?, ?, ?>,
                     entityComponent.setValue(wobject, entity);
                 }
             });
+            clazz.init(wobject);
             kill();
         }
 

@@ -128,6 +128,10 @@ public final class WobjectLoader {
 
             component.setValue(wobject, entity);
         }
+
+        if (wobject != null) {
+            clazz.init(wobject);
+        }
     }
 
     public boolean isFroze() {

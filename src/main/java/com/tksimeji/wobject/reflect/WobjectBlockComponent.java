@@ -14,8 +14,8 @@ import java.util.Objects;
 import java.util.UUID;
 
 public final class WobjectBlockComponent extends WobjectComponent<Block, Material, BlockComponent> {
-    public WobjectBlockComponent(@NotNull Field field) {
-        super(field);
+    WobjectBlockComponent(@NotNull WobjectClass<?> clazz, @NotNull Field field) {
+        super(clazz, field);
     }
 
     @Override

@@ -3,6 +3,7 @@ package com.tksimeji.wobject.reflect;
 import com.google.gson.JsonObject;
 import com.tksimeji.wobject.api.BlockComponent;
 import com.tksimeji.wobject.api.EntityComponent;
+import com.tksimeji.wobject.api.Initializer;
 import com.tksimeji.wobject.api.Wobject;
 import com.tksimeji.wobject.event.Event;
 import com.tksimeji.wobject.event.Handler;
@@ -45,6 +46,9 @@ public final class WobjectClass<T> implements Type {
 
     private final @NotNull Set<IWobjectComponent<?, ?, ?>> components;
     private final @NotNull Set<Method> handlers;
+    private final @NotNull Set<Method> initializers;
+
+    private final @NotNull Set<Object> initialized = new HashSet<>();
 
     private final @NotNull Map<UUID, Object> wobjects = new HashMap<>();
 
@@ -73,9 +77,9 @@ public final class WobjectClass<T> implements Type {
                                 (field.isAnnotationPresent(EntityComponent.class) && Entity.class.isAssignableFrom(field.getType())))
                         .map(field -> {
                             if (field.isAnnotationPresent(BlockComponent.class)) {
-                                return new WobjectBlockComponent(field);
+                                return new WobjectBlockComponent(this, field);
                             } else if (field.isAnnotationPresent(EntityComponent.class)) {
-                                return new WobjectEntityComponent(field);
+                                return new WobjectEntityComponent(this, field);
                             }
 
                             throw new UnsupportedOperationException();
@@ -86,6 +90,13 @@ public final class WobjectClass<T> implements Type {
                         method.getParameters().length == 1 &&
                         Event.class.isAssignableFrom(method.getParameterTypes()[0]))
                 .collect(Collectors.toCollection(LinkedHashSet::new));
+
+        initializers = getMethods().stream()
+                        .filter(method -> method.isAnnotationPresent(Initializer.class) && method.getParameters().length == 0)
+                        .sorted((m1, m2) -> Integer.compare(
+                                m2.getAnnotation(Initializer.class).priority(),
+                                m1.getAnnotation(Initializer.class).priority()
+                        )).collect(Collectors.toCollection(LinkedHashSet::new));
 
         instances.add(this);
     }
@@ -241,6 +252,22 @@ public final class WobjectClass<T> implements Type {
                 });
 
         return event;
+    }
+
+    public void init(@NotNull Object wobject) {
+        if (initialized.contains(wobject)) {
+            throw new IllegalStateException();
+        }
+
+        for (Method initializer : initializers) {
+            try {
+                initializer.invoke(wobject);
+            } catch (InvocationTargetException | IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        initialized.add(wobject);
     }
 
     public void kill(@NotNull Object wobject) {

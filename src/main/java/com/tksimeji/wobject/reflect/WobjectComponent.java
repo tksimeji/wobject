@@ -18,10 +18,12 @@ import java.lang.reflect.Field;
 import java.util.UUID;
 
 public abstract class WobjectComponent<V, E extends Enum<?>, A extends Annotation> implements IWobjectComponent<V, E, A> {
+    protected final @NotNull WobjectClass<?> clazz;
+
     protected final @NotNull Field field;
     protected final @NotNull A annotation;
 
-    public WobjectComponent(@NotNull Field field) {
+    public WobjectComponent(@NotNull WobjectClass<?> clazz, @NotNull Field field) {
         if (! field.isAnnotationPresent(getAnnotationClass())) {
             throw new IllegalArgumentException();
         }
@@ -30,6 +32,7 @@ public abstract class WobjectComponent<V, E extends Enum<?>, A extends Annotatio
             throw new IllegalArgumentException();
         }
 
+        this.clazz = clazz;
         this.field = field;
         annotation = field.getAnnotation(getAnnotationClass());
     }
@@ -78,7 +81,7 @@ public abstract class WobjectComponent<V, E extends Enum<?>, A extends Annotatio
 
     @Override
     public final @NotNull WobjectClass<?> getWobjectClass() {
-        return WobjectClass.of(getDeclaringClass());
+        return clazz;
     }
 
     @Override

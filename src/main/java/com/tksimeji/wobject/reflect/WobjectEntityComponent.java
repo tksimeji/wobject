@@ -20,8 +20,8 @@ import java.util.Optional;
 import java.util.UUID;
 
 public final class WobjectEntityComponent extends WobjectComponent<Entity, EntityType, EntityComponent> {
-    public WobjectEntityComponent(@NotNull Field field) {
-        super(field);
+    WobjectEntityComponent(@NotNull WobjectClass<?> clazz, @NotNull Field field) {
+        super(clazz, field);
     }
 
     @Override
