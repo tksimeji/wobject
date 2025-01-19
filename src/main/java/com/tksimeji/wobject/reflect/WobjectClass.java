@@ -244,6 +244,7 @@ public final class WobjectClass<T> implements Type {
                 })
                 .sorted(Comparator.comparingInt(handler -> handler.getAnnotation(Handler.class).priority()))
                 .forEach(handler -> {
+                    handler.setAccessible(true);
                     try {
                         handler.invoke(wobject, event);
                     } catch (InvocationTargetException | IllegalAccessException e) {
@@ -261,6 +262,7 @@ public final class WobjectClass<T> implements Type {
 
         for (Method initializer : initializers) {
             try {
+                initializer.setAccessible(true);
                 initializer.invoke(wobject);
             } catch (InvocationTargetException | IllegalAccessException e) {
                 throw new RuntimeException(e);
